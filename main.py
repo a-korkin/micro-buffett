@@ -28,7 +28,20 @@ class Candle:
         self.end = obj["end"]
 
     def __str__(self) -> str:
-        return f"open: {self.open}, close: {self.close}, begin: {self.begin}, end: {self.end}"
+        prefix = ""
+        suffix = "\033[0m"
+        if self.open < self.close:
+            prefix = "\033[32m"
+        elif self.open > self.close:
+            prefix = "\033[31m"
+        else:
+            prefix = ""
+            suffix = ""
+
+        return (
+            f"{prefix}open: {float(self.open):.2f}, close: {float(self.close):.2f}, "
+            f"begin: {self.begin}, end: {self.end}{suffix}"
+        )
 
     @staticmethod
     def parse_file(filename: str) -> list:
