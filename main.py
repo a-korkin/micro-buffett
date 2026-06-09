@@ -40,8 +40,11 @@ class Candle:
 
         return (
             f"{prefix}open: {float(self.open):.2f}, close: {float(self.close):.2f}, "
-            f"begin: {self.begin}, end: {self.end}{suffix}"
+            f"begin: {self.begin}, end: {self.end}, percent: {self.percent():>5.2f}{suffix}"
         )
+
+    def percent(self) -> float:
+        return ((float(self.close) - float(self.open)) / float(self.open)) * 100.0
 
     @staticmethod
     def parse_file(filename: str) -> list:
