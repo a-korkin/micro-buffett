@@ -1,0 +1,81 @@
+# ==========================================
+# Byte-compiled / optimized / DLL files
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ==========================================
+# Virtual Environments
+# ==========================================
+.venv/
+venv/
+ENV/
+env/
+# Poetry, Pipenv, and Conda directories
+.venv*
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# ==========================================
+# Environment Variables & Secrets
+# ==========================================
+.env
+.env.local
+.env.*
+!.env.example
+secrets.json
+
+# ==========================================
+# Distribution / Packaging / Build Artifacts
+# ==========================================
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ==========================================
+# Testing and Coverage
+# ==========================================
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# ==========================================
+# IDEs and Code Editors (Optional)
+# ==========================================
+# VS Code
+.vscode/
+
+# PyCharm / JetBrains
+.idea/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# ==========================================
+# OS Generated Files
+# ==========================================
+.DS_Store
+Thumbs.db
