@@ -40,11 +40,17 @@ class Candle:
 
         return (
             f"{prefix}open: {float(self.open):.2f}, close: {float(self.close):.2f}, "
-            f"begin: {self.begin}, end: {self.end}, percent: {self.percent():>5.2f}{suffix}"
+            f"begin: {self.begin}, end: {self.end}, percent: {self.percent():>6.3f}, "
+            f"avg: {self.average():.2f}{suffix}"
         )
 
     def percent(self) -> float:
-        return ((float(self.close) - float(self.open)) / float(self.open)) * 100.0
+        return round(
+            ((float(self.close) - float(self.open)) / float(self.open)) * 100.0, 3
+        )
+
+    def average(self) -> float:
+        return round((float(self.open) + float(self.close)) / 2.0, 2)
 
     @staticmethod
     def parse_file(filename: str) -> list:
