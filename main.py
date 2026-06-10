@@ -72,6 +72,12 @@ class Candle:
             return candles
 
 
+BACKGROUND_COLOR = (39, 51, 56, 255)
+RED = (224, 84, 84, 255)
+GREEN = (43, 87, 72, 255)
+BLACK = (0, 0, 0, 255)
+
+
 def run():
     sdl2.ext.init()
     window = sdl2.ext.Window("Terminal", size=(800, 600))
@@ -79,10 +85,9 @@ def run():
     running = True
     render_flags = sdl2.SDL_RENDERER_ACCELERATED | sdl2.SDL_RENDERER_PRESENTVSYNC
     renderer = sdl2.ext.Renderer(window, flags=render_flags)
-    BACKGROUND_COLOR = (255, 255, 255, 255)
 
-    rect = sdl2.SDL_Rect(150, 200, 40, 40)
-    RECT_COLOR = (255, 0, 0, 255)
+    rect1 = sdl2.SDL_Rect(150, 200, 40, 40)
+    rect2 = sdl2.SDL_Rect(100, 100, 20, 20)
 
     while running:
         events = sdl2.ext.get_events()
@@ -93,9 +98,12 @@ def run():
 
         renderer.clear(BACKGROUND_COLOR)
         renderer.fill(
-            rect,
-            RECT_COLOR,
+            [rect1, rect2],
+            GREEN,
         )
+        renderer.scale = (5.0, 5.0)
+        renderer.draw_line([(20, 20), (300, 300)], BLACK)
+        renderer.scale = (1.0, 1.0)
         renderer.present()
 
     sdl2.ext.quit()
