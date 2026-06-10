@@ -1,7 +1,10 @@
 import csv
 import os
+import sys
 from datetime import datetime
 
+import sdl2
+import sdl2.ext
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -69,6 +72,35 @@ class Candle:
             return candles
 
 
+def run():
+    sdl2.ext.init()
+    window = sdl2.ext.Window("Terminal", size=(800, 600))
+    window.show()
+    running = True
+    render_flags = sdl2.SDL_RENDERER_ACCELERATED | sdl2.SDL_RENDERER_PRESENTVSYNC
+    renderer = sdl2.ext.Renderer(window, flags=render_flags)
+    BACKGROUND_COLOR = (255, 255, 255, 255)
+
+    rect = sdl2.SDL_Rect(150, 200, 40, 40)
+    RECT_COLOR = (255, 0, 0, 255)
+
+    while running:
+        events = sdl2.ext.get_events()
+        for event in events:
+            if event.type == sdl2.SDL_QUIT:
+                running = False
+                break
+
+        renderer.clear(BACKGROUND_COLOR)
+        renderer.fill(
+            rect,
+            RECT_COLOR,
+        )
+        renderer.present()
+
+    sdl2.ext.quit()
+
+
 def main():
     filename = os.getenv("FILENAME") or ""
     candles = Candle.parse_file(filename)
@@ -77,4 +109,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(run())
+    # main()
