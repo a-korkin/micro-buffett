@@ -28,6 +28,21 @@ class Candle:
         self.end = obj["end"]
 
     def __str__(self) -> str:
+        return (
+            f"open: {float(self.open):.2f}, close: {float(self.close):.2f}, "
+            f"begin: {self.begin}, end: {self.end}, percent: {self.percent():>6.3f}, "
+            f"avg: {self.average():.2f}"
+        )
+
+    def percent(self) -> float:
+        return round(
+            ((float(self.close) - float(self.open)) / float(self.open)) * 100.0, 3
+        )
+
+    def average(self) -> float:
+        return round((float(self.open) + float(self.close)) / 2.0, 2)
+
+    def info(self) -> str:
         prefix = ""
         suffix = "\033[0m"
         if self.open < self.close:
@@ -39,18 +54,9 @@ class Candle:
             suffix = ""
 
         return (
-            f"{prefix}open: {float(self.open):.2f}, close: {float(self.close):.2f}, "
-            f"begin: {self.begin}, end: {self.end}, percent: {self.percent():>6.3f}, "
+            f"{prefix}begin: {self.begin}, percent: {self.percent():>6.3f}, "
             f"avg: {self.average():.2f}{suffix}"
         )
-
-    def percent(self) -> float:
-        return round(
-            ((float(self.close) - float(self.open)) / float(self.open)) * 100.0, 3
-        )
-
-    def average(self) -> float:
-        return round((float(self.open) + float(self.close)) / 2.0, 2)
 
     @staticmethod
     def parse_file(filename: str) -> list:
@@ -67,7 +73,7 @@ def main():
     filename = os.getenv("FILENAME") or ""
     candles = Candle.parse_file(filename)
     for candle in candles:
-        print(candle)
+        print(candle.info())
 
 
 if __name__ == "__main__":
