@@ -4,7 +4,8 @@ import sys
 from datetime import datetime
 
 from dotenv import load_dotenv
-from pyray import *
+
+from terminal import run
 
 load_dotenv()
 
@@ -69,22 +70,6 @@ class Candle:
                 candles.append(Candle(row))
 
             return candles
-
-
-BACKGROUND_COLOR = (39, 51, 56, 255)
-RED = (224, 84, 84, 255)
-GREEN = (43, 87, 72, 255)
-BLACK = (0, 0, 0, 255)
-
-
-def run():
-    init_window(800, 450, "Hello")
-    while not window_should_close():
-        begin_drawing()
-        clear_background(WHITE)
-        draw_text("Hello world", 190, 200, 20, VIOLET)
-        end_drawing()
-    close_window()
 
 
 def main():
