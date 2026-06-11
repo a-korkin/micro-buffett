@@ -61,24 +61,26 @@ class Candle:
             f"avg: {self.average():.2f}{suffix}"
         )
 
-    @staticmethod
-    def parse_file(filename: str) -> list:
-        with open(file=filename, mode="r", encoding="utf-8", newline="") as file:
-            reader = csv.DictReader(file, delimiter=";")
-            candles = []
-            for row in reader:
-                candles.append(Candle(row))
 
-            return candles
+def parse_file(filename: str, _type: type) -> list:
+    with open(file=filename, mode="r", encoding="utf-8", newline="") as file:
+        reader = csv.DictReader(file, delimiter=";")
+        return [_type(row) for row in reader]
 
 
 def main():
     filename = os.getenv("FILENAME") or ""
-    candles = Candle.parse_file(filename)
-    for candle in candles:
-        print(candle.info())
+    candles = parse_file(filename, Candle)
+    min_open: Candle = min(candles, key=lambda c: c.open)
+    max_open: Candle = max(candles, key=lambda c: c.open)
+    max_percent: Candle = max(candles, key=lambda c: c.percent())
+    print(min_open)
+    print(max_open)
+    print(max_percent)
+    # for candle in candles:
+    #     print(candle.info())
 
 
 if __name__ == "__main__":
-    sys.exit(run())
-    # main()
+    # sys.exit(run())
+    main()
