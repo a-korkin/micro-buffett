@@ -17,4 +17,5 @@ url="https://iss.moex.com/iss/statistics/engines/stock/markets/bonds/bondization
 # curl -s -X GET ${url} | jq ".[1].coupons"
 # tail -n +3 tests/data/boundization/second.csv
 
+mkdir -p ${download_path}
 curl -s -X GET ${url} | iconv -f WINDOWS-1251  -t UTF-8 | tail -n +3 > ${download_path}coupons.csv
