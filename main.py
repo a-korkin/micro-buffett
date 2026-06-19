@@ -10,6 +10,13 @@ from terminal import run
 load_dotenv()
 
 
+def safe_float(value, default=0.0):
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
+
 class Candle:
     open: float
     close: float
@@ -62,13 +69,49 @@ class Candle:
         )
 
 
+class Coupon:
+    isin: str
+    name: str
+    issuevalue: float
+    coupondate: datetime
+    recorddate: datetime
+    startdate: datetime
+    initialfacevalue: float
+    facevalue: float
+    faceunit: str
+    value: float
+    valueprc: float
+    value_rub: float
+    secid: str
+    primary_boardid: str
+
+    def __init__(self, obj: dict):
+        self.isin = obj["isin"]
+        self.name = obj["name"]
+        self.issuevalue = obj["issuevalue"]
+        self.coupondate = obj["coupondate"]
+        self.recorddate = obj["recorddate"]
+        self.startdate = obj["startdate"]
+        self.initialfacevalue = obj["initialfacevalue"]
+        self.facevalue = obj["facevalue"]
+        self.faceunit = obj["faceunit"]
+        self.value = obj["value"]
+        self.valueprc = safe_float(obj["valueprc"])
+        self.value_rub = obj["value_rub"]
+        self.secid = obj["secid"]
+        self.primary_boardid = obj["primary_boardid"]
+
+    def __str__(self) -> str:
+        return f"isin: {self.isin}, valueprc: {self.valueprc}"
+
+
 def parse_file(filename: str, _type: type) -> list:
     with open(file=filename, mode="r", encoding="utf-8", newline="") as file:
         reader = csv.DictReader(file, delimiter=";")
         return [_type(row) for row in reader]
 
 
-def main():
+def candles_show():
     filename = os.getenv("FILENAME") or ""
     candles = parse_file(filename, Candle)
     min_open: Candle = min(candles, key=lambda c: c.open)
@@ -79,6 +122,21 @@ def main():
     print(max_percent)
     # for candle in candles:
     #     print(candle.info())
+
+
+def coupons_show():
+    filename = os.getenv("FILENAME") or ""
+    coupons = parse_file(filename, Coupon)
+    for coupon in coupons:
+        print(coupon)
+    max_percent: Coupon = max(coupons, key=lambda c: float(c.valueprc))
+    print("===================================================")
+    print("MAX =>", max_percent)
+
+
+def main():
+    # candles_show()
+    coupons_show()
 
 
 if __name__ == "__main__":
