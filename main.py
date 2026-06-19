@@ -2,6 +2,7 @@ import csv
 import os
 import sys
 from datetime import datetime
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -111,6 +112,10 @@ def parse_file(filename: str, _type: type) -> list:
         return [_type(row) for row in reader]
 
 
+def list_files(path: str) -> list[str]:
+    return [str(f) for f in Path(path).iterdir() if f.is_file()]
+
+
 def candles_show():
     filename = os.getenv("FILENAME") or ""
     candles = parse_file(filename, Candle)
@@ -134,9 +139,26 @@ def coupons_show():
     print("MAX =>", max_percent)
 
 
+def get_coupons() -> list[Coupon]:
+    dir = os.getenv("DIR") or ""
+    files = list_files(f"{dir}/boundization/2026-06-19")
+    files = [file for file in files if not file.endswith("cursor.csv")]
+
+    coupons: list = []
+    for filename in files:
+        coupons.extend(parse_file(filename, Coupon))
+
+    max_percent: Coupon = max(coupons, key=lambda c: float(c.valueprc))
+    print("===================================================")
+    print("MAX =>", max_percent)
+
+    return coupons
+
+
 def main():
     # candles_show()
-    coupons_show()
+    # coupons_show()
+    print(len(get_coupons()))
 
 
 if __name__ == "__main__":
