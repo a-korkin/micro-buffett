@@ -129,16 +129,6 @@ def candles_show():
     #     print(candle.info())
 
 
-def coupons_show():
-    filename = os.getenv("FILENAME") or ""
-    coupons = parse_file(filename, Coupon)
-    for coupon in coupons:
-        print(coupon)
-    max_percent: Coupon = max(coupons, key=lambda c: float(c.valueprc))
-    print("===================================================")
-    print("MAX =>", max_percent)
-
-
 def get_coupons() -> list[Coupon]:
     dir = os.getenv("DIR") or ""
     files = list_files(f"{dir}/boundization/2026-06-19")
@@ -148,17 +138,20 @@ def get_coupons() -> list[Coupon]:
     for filename in files:
         coupons.extend(parse_file(filename, Coupon))
 
-    max_percent: Coupon = max(coupons, key=lambda c: float(c.valueprc))
-    print("===================================================")
-    print("MAX =>", max_percent)
-
     return coupons
+
+
+def coupons_show():
+    coupons = get_coupons()
+    isins = [coupon.isin for coupon in coupons]
+    for isin in isins:
+        print(isin)
 
 
 def main():
     # candles_show()
     # coupons_show()
-    print(len(get_coupons()))
+    coupons_show()
 
 
 if __name__ == "__main__":
