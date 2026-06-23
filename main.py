@@ -106,6 +106,104 @@ class Coupon:
         return f"isin: {self.isin}, valueprc: {self.valueprc}"
 
 
+class Security:
+    secid: str
+    boardid: str
+    shortname: str
+    prevwaprice: str
+    yieldatprevwaprice: str
+    couponvalue: str
+    nextcoupon: str
+    accruedint: str
+    prevprice: str
+    lotsize: str
+    facevalue: str
+    boardname: str
+    status: str
+    matdate: str
+    decimals: str
+    couponperiod: str
+    issuesize: str
+    prevlegalcloseprice: str
+    prevdate: str
+    secname: str
+    remarks: str
+    marketcode: str
+    instrid: str
+    sectorid: str
+    minstep: str
+    faceunit: str
+    buybackprice: str
+    buybackdate: str
+    isin: str
+    latname: str
+    regnumber: str
+    currencyid: str
+    issuesizeplaced: str
+    listlevel: str
+    sectype: str
+    couponpercent: str
+    offerdate: str
+    settledate: str
+    lotvalue: str
+    facevalueonsettledate: str
+    calloptiondate: str
+    putoptiondate: str
+    dateyieldfromissuer: str
+    bondtype: str
+    bondsubtype: str
+
+    def __init__(self, obj: dict):
+        self.secid = obj["SECID"]
+        self.boardid = obj["BOARDID"]
+        self.shortname = obj["SHORTNAME"]
+        self.prevwaprice = obj["PREVWAPRICE"]
+        self.yieldatprevwaprice = obj["YIELDATPREVWAPRICE"]
+        self.couponvalue = obj["COUPONVALUE"]
+        self.nextcoupon = obj["NEXTCOUPON"]
+        self.accruedint = obj["ACCRUEDINT"]
+        self.prevprice = obj["PREVPRICE"]
+        self.lotsize = obj["LOTSIZE"]
+        self.facevalue = obj["FACEVALUE"]
+        self.boardname = obj["BOARDNAME"]
+        self.status = obj["STATUS"]
+        self.matdate = obj["MATDATE"]
+        self.decimals = obj["DECIMALS"]
+        self.couponperiod = obj["COUPONPERIOD"]
+        self.issuesize = obj["ISSUESIZE"]
+        self.prevlegalcloseprice = obj["PREVLEGALCLOSEPRICE"]
+        self.prevdate = obj["PREVDATE"]
+        self.secname = obj["SECNAME"]
+        self.remarks = obj["REMARKS"]
+        self.marketcode = obj["MARKETCODE"]
+        self.instrid = obj["INSTRID"]
+        self.sectorid = obj["SECTORID"]
+        self.minstep = obj["MINSTEP"]
+        self.faceunit = obj["FACEUNIT"]
+        self.buybackprice = obj["BUYBACKPRICE"]
+        self.buybackdate = obj["BUYBACKDATE"]
+        self.isin = obj["ISIN"]
+        self.latname = obj["LATNAME"]
+        self.regnumber = obj["REGNUMBER"]
+        self.currencyid = obj["CURRENCYID"]
+        self.issuesizeplaced = obj["ISSUESIZEPLACED"]
+        self.listlevel = obj["LISTLEVEL"]
+        self.sectype = obj["SECTYPE"]
+        self.couponpercent = obj["COUPONPERCENT"]
+        self.offerdate = obj["OFFERDATE"]
+        self.settledate = obj["SETTLEDATE"]
+        self.lotvalue = obj["LOTVALUE"]
+        self.facevalueonsettledate = obj["FACEVALUEONSETTLEDATE"]
+        self.calloptiondate = obj["CALLOPTIONDATE"]
+        self.putoptiondate = obj["PUTOPTIONDATE"]
+        self.dateyieldfromissuer = obj["DATEYIELDFROMISSUER"]
+        self.bondtype = obj["BONDTYPE"]
+        self.bondsubtype = obj["BONDSUBTYPE"]
+
+    def __str__(self) -> str:
+        return f"SECID: {self.secid}, SHORTNAME: {self.shortname}"
+
+
 def parse_file(filename: str, _type: type) -> list:
     with open(file=filename, mode="r", encoding="utf-8", newline="") as file:
         reader = csv.DictReader(file, delimiter=";")
@@ -141,6 +239,24 @@ def get_coupons() -> list[Coupon]:
     return coupons
 
 
+def get_securities() -> list[Security]:
+    dir = os.getenv("DIR") or ""
+    files = list_files(f"{dir}/boundization/2026-06-23")
+    files = [file for file in files if file.endswith("bonds.csv")]
+
+    result: list = []
+    for filename in files:
+        result.extend(parse_file(filename, Security))
+
+    print("=================================================")
+    for item in result:
+        print(item.bondsubtype)
+
+    print("==================================================")
+    print(len(result))
+    return result
+
+
 def coupons_show():
     coupons = get_coupons()
     isins = [coupon.isin for coupon in coupons]
@@ -151,7 +267,8 @@ def coupons_show():
 def main():
     # candles_show()
     # coupons_show()
-    coupons_show()
+    # coupons_show()
+    get_securities()
 
 
 if __name__ == "__main__":

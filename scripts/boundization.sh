@@ -60,14 +60,11 @@ get_coupons() {
     iterate_through_pages coupons
 }
 
-get_infos() {
+get_info() {
     dir="${base_dir}/securities"
-    securities=("RU000A10BGE5")
-    for security in "${securities[@]}"; do
-        url="https://iss.moex.com/iss/securities/${security}.csv?iss.only=description"
-        check_dir_exists ${dir}
-        download_csv ${url} ${security}
-    done
+    url="https://iss.moex.com/iss/securities/${1}.csv?iss.only=description"
+    check_dir_exists ${dir}
+    download_csv ${url} ${1}
 }
 
 get_bonds_securities() {
@@ -81,14 +78,21 @@ case "$1" in
     "coupons")
         get_coupons
     ;;
-    "infos")
-        get_infos
+    "info")
+        get_info "RU000A10BGE5"
     ;;
     "bonds")
         get_bonds_securities
     ;;
+    "infos")
+        while read -r secid; do
+            get_info $secid
+            sleep 3
+        done < <(awk -F';' '{print $1}' tests/data/boundization/2026-06-23/bonds.csv | tail -n +2)
+    ;;
     *)
-        echo "default logic"
+        echo "unknown command"
+        exit 1
     ;;
 esac
 
