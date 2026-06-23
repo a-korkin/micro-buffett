@@ -60,7 +60,7 @@ get_coupons() {
     iterate_through_pages coupons
 }
 
-get_securities_info() {
+get_infos() {
     dir="${base_dir}/securities"
     securities=("RU000A10BGE5")
     for security in "${securities[@]}"; do
@@ -70,12 +70,22 @@ get_securities_info() {
     done
 }
 
+get_bonds_securities() {
+    url="https://iss.moex.com/iss/engines/stock/markets/bonds/securities.csv?iss.only=securities"
+    dir="${base_dir}"
+    check_dir_exists ${dir}
+    download_csv ${url} "bonds"
+}
+
 case "$1" in
     "coupons")
         get_coupons
     ;;
     "infos")
-        get_securities_info
+        get_infos
+    ;;
+    "bonds")
+        get_bonds_securities
     ;;
     *)
         echo "default logic"
