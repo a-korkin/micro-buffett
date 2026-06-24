@@ -241,7 +241,7 @@ def get_coupons() -> list[Coupon]:
 
 def get_securities() -> list[Security]:
     dir = os.getenv("DIR") or ""
-    files = list_files(f"{dir}/boundization/2026-06-23")
+    files = list_files(f"{dir}/boundization/2026-06-24")
     files = [file for file in files if file.endswith("bonds.csv")]
 
     result: list = []

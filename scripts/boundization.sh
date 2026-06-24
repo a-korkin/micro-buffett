@@ -17,9 +17,7 @@ print_status() {
 }
 
 check_dir_exists() {
-    if [ -d ${1} ]; then
-        echo "directory: ${1} already exists"
-    else
+    if [ ! -d ${1} ]; then
         mkdir -p ${1}
     fi
 }
@@ -63,6 +61,7 @@ get_coupons() {
 get_info() {
     dir="${base_dir}/securities"
     url="https://iss.moex.com/iss/securities/${1}.csv?iss.only=description"
+    print_status
     check_dir_exists ${dir}
     download_csv ${url} ${1}
 }
@@ -88,7 +87,7 @@ case "$1" in
         while read -r secid; do
             get_info $secid
             sleep 3
-        done < <(awk -F';' '{print $1}' tests/data/boundization/2026-06-23/bonds.csv | tail -n +2)
+        done < <(awk -F';' '{print $1}' ${base_dir}/bonds.csv | tail -n +2)
     ;;
     *)
         echo "unknown command"
