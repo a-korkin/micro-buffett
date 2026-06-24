@@ -43,9 +43,11 @@ iterate_through_pages() {
         url="${base_url}\
 ?from=${from}&till=${till}&start=${start}&limit=${step}&iss.only=${1}\
 &sort_order=desc&iss.json=extended&lang=ru&is_traded=1"
-        print_status
-        download_csv ${url} coupons "_${iteration}"
-        sleep 5
+        # print_status
+        echo "step: ${start} from total: ${total}"
+        suffix=$(printf "%03d" $iteration)
+        download_csv ${url} coupons "_${suffix}"
+        sleep 1
         ((start += step))
         ((iteration += 1))
     done
@@ -88,6 +90,18 @@ case "$1" in
             get_info $secid
             sleep 3
         done < <(awk -F';' '{print $1}' ${base_dir}/bonds.csv | tail -n +2)
+    ;;
+    "isins")
+        search_dir="$base_dir/coupons"
+        for entry in "$search_dir"/*
+        do
+            if [[ $entry != *".cursor.csv" ]]; then
+                awk -F';' '{print $1}' ${entry} | tail -n +2 | grep '.'
+            fi
+        done
+    ;;
+    "check")
+        printf "%04d" 7
     ;;
     *)
         echo "unknown command"

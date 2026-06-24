@@ -229,7 +229,8 @@ def candles_show():
 
 def get_coupons() -> list[Coupon]:
     dir = os.getenv("DIR") or ""
-    files = list_files(f"{dir}/boundization/2026-06-19")
+    today = datetime.today().date()
+    files = list_files(f"{dir}/boundization/{today}/coupons")
     files = [file for file in files if not file.endswith("cursor.csv")]
 
     coupons: list = []
@@ -262,13 +263,14 @@ def coupons_show():
     isins = [coupon.isin for coupon in coupons]
     for isin in isins:
         print(isin)
+    print("===================================================")
+    print(len(coupons))
 
 
 def main():
     # candles_show()
-    # coupons_show()
-    # coupons_show()
-    get_securities()
+    coupons_show()
+    # get_securities()
 
 
 if __name__ == "__main__":
