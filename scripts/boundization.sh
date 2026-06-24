@@ -93,10 +93,12 @@ case "$1" in
     ;;
     "isins")
         search_dir="$base_dir/coupons"
-        for entry in "$search_dir"/*
-        do
+        for entry in "$search_dir"/*; do
             if [[ $entry != *".cursor.csv" ]]; then
-                awk -F';' '{print $1}' ${entry} | tail -n +2 | grep '.'
+                while read -r secid; do
+                    get_info $secid
+                    sleep 1
+                done < <(awk -F';' '{print $1}' ${entry} | tail -n +2 | grep '.')
             fi
         done
     ;;
