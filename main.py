@@ -3,6 +3,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from dotenv import load_dotenv
 
@@ -204,6 +205,28 @@ class Security:
         return f"SECID: {self.secid}, SHORTNAME: {self.shortname}"
 
 
+class BondDescription:
+    name: str
+    title: str
+    value: str
+    type: str
+    sort_order: int
+    is_hidden: int
+    precision: Optional[int] = None
+
+    def __init__(self, obj: dict):
+        self.name = obj["name"]
+        self.title = obj["title"]
+        self.value = obj["value"]
+        self.type = obj["type"]
+        self.sort_order = obj["sort_order"]
+        self.is_hidden = obj["is_hidden"]
+        self.precision = obj["precision"]
+
+    def __str__(self) -> str:
+        return f"name: {self.name}, title: {self.title}, value: {self.value}"
+
+
 def parse_file(filename: str, _type: type) -> list:
     with open(file=filename, mode="r", encoding="utf-8", newline="") as file:
         reader = csv.DictReader(file, delimiter=";")
@@ -267,10 +290,31 @@ def coupons_show():
     print(len(coupons))
 
 
+def bond_descriptions_show():
+    dir = os.getenv("DIR") or ""
+    files = list_files(f"{dir}/boundization/2026-06-25/securities")
+    files = [file for file in files]
+
+    result: list = []
+    for filename in files:
+        rows: list[BondDescription] = parse_file(filename, BondDescription)
+        data = {row.name: row.value for row in rows}
+
+        if data.get("ISQUALIFIEDINVESTORS", "1") != "1":
+            result.append(data)
+
+    for item in result:
+        print("=======================================")
+        # print(item)
+        print(item["SECID"])
+    print(len(result))
+
+
 def main():
     # candles_show()
-    coupons_show()
+    # coupons_show()
     # get_securities()
+    bond_descriptions_show()
 
 
 if __name__ == "__main__":
