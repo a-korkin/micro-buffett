@@ -7,6 +7,7 @@ from typing import Optional
 
 from dotenv import load_dotenv
 
+from db import execute
 from terminal import run
 
 load_dotenv()
@@ -314,7 +315,8 @@ def main():
     # candles_show()
     # coupons_show()
     # get_securities()
-    bond_descriptions_show()
+    # bond_descriptions_show()
+    execute()
 
 
 if __name__ == "__main__":
