@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class DatabaseSettings(BaseSettings):
+class AppSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
     FILENAME: str = ""
     DIR: str = ""
@@ -12,4 +12,4 @@ class DatabaseSettings(BaseSettings):
     DB_URL: str = ""
 
 
-settings = DatabaseSettings()
+app_settings = AppSettings()

@@ -7,17 +7,11 @@ from typing import Optional
 
 from dotenv import load_dotenv
 
-from db import execute
+from db.repository import add_coupon, add_coupons, get_coupons
+from models.coupon import Coupon
 from terminal import run
 
 load_dotenv()
-
-
-def safe_float(value, default=0.0):
-    try:
-        return float(value)
-    except (ValueError, TypeError):
-        return default
 
 
 class Candle:
@@ -72,40 +66,43 @@ class Candle:
         )
 
 
-class Coupon:
-    isin: str
-    name: str
-    issuevalue: float
-    coupondate: datetime
-    recorddate: datetime
-    startdate: datetime
-    initialfacevalue: float
-    facevalue: float
-    faceunit: str
-    value: float
-    valueprc: float
-    value_rub: float
-    secid: str
-    primary_boardid: str
-
-    def __init__(self, obj: dict):
-        self.isin = obj["isin"]
-        self.name = obj["name"]
-        self.issuevalue = obj["issuevalue"]
-        self.coupondate = obj["coupondate"]
-        self.recorddate = obj["recorddate"]
-        self.startdate = obj["startdate"]
-        self.initialfacevalue = obj["initialfacevalue"]
-        self.facevalue = obj["facevalue"]
-        self.faceunit = obj["faceunit"]
-        self.value = obj["value"]
-        self.valueprc = safe_float(obj["valueprc"])
-        self.value_rub = obj["value_rub"]
-        self.secid = obj["secid"]
-        self.primary_boardid = obj["primary_boardid"]
-
-    def __str__(self) -> str:
-        return f"isin: {self.isin}, valueprc: {self.valueprc}"
+# class Coupon:
+#     isin: str
+#     name: str
+#     issuevalue: float
+#     coupondate: datetime
+#     recorddate: datetime
+#     startdate: datetime
+#     initialfacevalue: float
+#     facevalue: float
+#     faceunit: str
+#     value: float
+#     valueprc: float
+#     value_rub: float
+#     secid: str
+#     primary_boardid: str
+#
+#     def __init__(self, obj: dict):
+#         self.isin = obj["isin"]
+#         self.name = obj["name"]
+#         self.issuevalue = obj["issuevalue"]
+#         self.coupondate = obj["coupondate"]
+#         self.recorddate = obj["recorddate"]
+#         self.startdate = obj["startdate"]
+#         self.initialfacevalue = obj["initialfacevalue"]
+#         self.facevalue = obj["facevalue"]
+#         self.faceunit = obj["faceunit"]
+#         self.value = obj["value"]
+#         self.valueprc = safe_float(obj["valueprc"])
+#         self.value_rub = obj["value_rub"]
+#         self.secid = obj["secid"]
+#         self.primary_boardid = obj["primary_boardid"]
+#
+#     def __str__(self) -> str:
+#         return (
+#             f"isin: {self.isin}, valueprc: {self.valueprc}, "
+#             f"couponsdate: {self.coupondate}, recorddate: {self.recorddate}"
+#         )
 
 
 class Security:
@@ -251,10 +248,9 @@ def candles_show():
     #     print(candle.info())
 
 
-def get_coupons() -> list[Coupon]:
+def parse_coupons() -> list[Coupon]:
     dir = os.getenv("DIR") or ""
-    today = datetime.today().date()
-    files = list_files(f"{dir}/boundization/{today}/coupons")
+    files = list_files(f"{dir}/boundization/2026-06-25/coupons")
     files = [file for file in files if not file.endswith("cursor.csv")]
 
     coupons: list = []
@@ -282,13 +278,13 @@ def get_securities() -> list[Security]:
     return result
 
 
-def coupons_show():
-    coupons = get_coupons()
-    isins = [coupon.isin for coupon in coupons]
-    for isin in isins:
-        print(isin)
-    print("===================================================")
-    print(len(coupons))
+# def coupons_show():
+#     coupons = get_coupons()
+#     isins = [coupon.isin for coupon in coupons]
+#     for isin in isins:
+#         print(isin)
+#     print("===================================================")
+#     print(len(coupons))
 
 
 def bond_descriptions_show():
@@ -316,7 +312,14 @@ def main():
     # coupons_show()
     # get_securities()
     # bond_descriptions_show()
-    execute()
+
+    parsed_coupons = parse_coupons()
+    add_coupons(parsed_coupons)
+
+    # coupon = parsed_coupons[0]
+    # add_coupon(coupon)
+    # coupons = get_coupons()
+    # print(coupons)
 
 
 if __name__ == "__main__":
