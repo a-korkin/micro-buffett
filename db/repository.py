@@ -4,17 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
 from models.coupon import Coupon
+from models.security import Security
 
 from .engine import engine
-
-
-def add_coupon(coupon: Coupon):
-    data = coupon.__dict__.copy()
-    data.pop("_sa_instance_state", None)
-    stmt = insert(Coupon).values(data)
-    with engine.connect() as connection:
-        connection.execute(stmt)
-        connection.commit()
 
 
 def add_coupons(coupons: list[Coupon]):
@@ -53,3 +45,20 @@ def get_coupons() -> list[Coupon]:
     with engine.connect() as connection:
         result = connection.execute(stmt).all()
         return cast("list[Coupon]", result)
+
+
+def add_security_description(security: Security):
+    data = security.__dict__.copy()
+    data.pop("_sa_instance_state", None)
+    stmt = insert(Security).values(data)
+
+    with engine.connect() as connection:
+        connection.execute(stmt)
+        connection.commit()
+
+
+def get_security_descriptions() -> list[Security]:
+    stmt = select(Security)
+    with engine.connect() as connection:
+        result = connection.execute(stmt).all()
+        return cast("list[Security]", result)
