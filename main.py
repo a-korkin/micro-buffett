@@ -1,4 +1,5 @@
 import csv
+import logging
 import os
 import sys
 from datetime import datetime
@@ -10,6 +11,11 @@ from dotenv import load_dotenv
 from db.repository import add_coupon, add_coupons, get_coupons
 from models.coupon import Coupon
 from terminal import run
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -255,7 +261,10 @@ def parse_coupons() -> list[Coupon]:
 
     coupons: list = []
     for filename in files:
-        coupons.extend(parse_file(filename, Coupon))
+        logger.info("parsing file: %s", filename)
+        parsed = parse_file(filename, Coupon)
+        coupons.extend(parsed)
+        add_coupons(parsed)
 
     return coupons
 
@@ -314,7 +323,8 @@ def main():
     # bond_descriptions_show()
 
     parsed_coupons = parse_coupons()
-    add_coupons(parsed_coupons)
+    logger.info("total: %d", len(parsed_coupons))
+    # add_coupons(parsed_coupons)
 
     # coupon = parsed_coupons[0]
     # add_coupon(coupon)

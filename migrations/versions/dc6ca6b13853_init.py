@@ -1,8 +1,8 @@
-"""initial migrate
+"""init
 
-Revision ID: 5a157ad8d8a0
+Revision ID: dc6ca6b13853
 Revises: 
-Create Date: 2026-06-27 20:48:57.705491
+Create Date: 2026-06-28 16:28:01.026071
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '5a157ad8d8a0'
+revision: str = 'dc6ca6b13853'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,12 +24,12 @@ def upgrade() -> None:
     op.create_table('coupons',
     sa.Column('isin', sa.String(length=256), nullable=False),
     sa.Column('name', sa.String(length=256), nullable=False),
-    sa.Column('issuevalue', sa.Integer(), nullable=False),
+    sa.Column('issuevalue', sa.BigInteger(), nullable=False),
     sa.Column('coupondate', sa.Date(), nullable=False),
-    sa.Column('recorddate', sa.Date(), nullable=False),
-    sa.Column('startdate', sa.Date(), nullable=False),
-    sa.Column('initialfacevalue', sa.Integer(), nullable=False),
-    sa.Column('facevalue', sa.Integer(), nullable=False),
+    sa.Column('recorddate', sa.Date(), nullable=True),
+    sa.Column('startdate', sa.Date(), nullable=True),
+    sa.Column('initialfacevalue', sa.Float(), nullable=False),
+    sa.Column('facevalue', sa.Float(), nullable=False),
     sa.Column('faceunit', sa.String(length=8), nullable=False),
     sa.Column('value', sa.Float(), nullable=False),
     sa.Column('valueprc', sa.Float(), nullable=False),
