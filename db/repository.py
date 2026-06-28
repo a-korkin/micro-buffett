@@ -1,6 +1,7 @@
 from typing import cast
 
-from sqlalchemy import insert, select
+from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 
 from models.coupon import Coupon
 
@@ -25,6 +26,23 @@ def add_coupons(coupons: list[Coupon]):
 
     if len(data) > 0:
         stmt = insert(Coupon).values(data)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["isin"],
+            set_=dict(
+                name=stmt.excluded.name,
+                issuevalue=stmt.excluded.issuevalue,
+                coupondate=stmt.excluded.coupondate,
+                recorddate=stmt.excluded.recorddate,
+                startdate=stmt.excluded.startdate,
+                initialfacevalue=stmt.excluded.initialfacevalue,
+                facevalue=stmt.excluded.facevalue,
+                faceunit=stmt.excluded.faceunit,
+                value=stmt.excluded.value,
+                valueprc=stmt.excluded.valueprc,
+                value_rub=stmt.excluded.value_rub,
+            ),
+        )
+
         with engine.connect() as connection:
             connection.execute(stmt)
             connection.commit()
