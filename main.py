@@ -281,61 +281,31 @@ def parse_coupons() -> list[Coupon]:
 #     print(len(coupons))
 
 
-def bond_descriptions_show():
+def fetch_security_description():
     dir = os.getenv("DIR") or ""
     files = list_files(f"{dir}/boundization/2026-06-25/securities")
     files = [file for file in files]
 
-    result: list = []
-    for filename in files[:1]:
+    for filename in files:
         rows: list[Description] = parse_file(filename, Description)
-        # description = json.dumps([row.__dict__ for row in rows])
         description = [row.__dict__ for row in rows]
-        # description = json.dumps(rows)
-        secid = [row.name for row in rows if row.name == "SECID"][0]
-        # print(description)
-        security = Security(secid=secid, description=description)
-        # print(security)
-        add_security_description(security)
-
-    securities = get_security_descriptions()
-    print(securities)
-
-    # for row in rows:
-    #     print(
-    #         row.name,
-    #         "|",
-    #         row.title,
-    #         "|",
-    #         row.value,
-    #         "|",
-    #         row.type,
-    #         "|",
-    #         row.sort_order,
-    #         "|",
-    #         row.is_hidden,
-    #         "|",
-    #         row.precision,
-    #     )
-
-    # data = {row.name: row.value for row in rows}
-    # result.append(data)
-
-
-# "columns": ["name", "title", "value", "type", "sort_order", "is_hidden", "precision"],
-
-# for item in result:
-#     print("=======================================")
-#     print(item)
-# print(item["SECID"])
-# print(len(result))
+        secid = [row.value for row in rows if row.name == "SECID"]
+        if len(secid) == 0:
+            continue
+        secid = secid[0]
+        try:
+            logger.info("adding security description: %s", secid)
+            security = Security(secid=secid, description=description)
+            add_security_description(security)
+        except Exception:
+            logger.error("couldn't add security description: %s", secid)
 
 
 def main():
     # candles_show()
     # coupons_show()
     # get_securities()
-    bond_descriptions_show()
+    fetch_security_description()
 
     # parsed_coupons = parse_coupons()
     # logger.info("total: %d", len(parsed_coupons))
