@@ -33,6 +33,7 @@ class Security(Base):
     __tablename__ = "securities"
     secid: Mapped[str] = mapped_column(String(256), primary_key=True)
     description: Mapped[list[dict]] = mapped_column(ARRAY(JSONB))
+    info: Mapped[dict] = mapped_column(JSONB)
 
     def __str__(self) -> str:
         return f"secid: {self.secid}"

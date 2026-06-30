@@ -289,13 +289,17 @@ def fetch_security_description():
     for filename in files:
         rows: list[Description] = parse_file(filename, Description)
         description = [row.__dict__ for row in rows]
-        secid = [row.value for row in rows if row.name == "SECID"]
-        if len(secid) == 0:
+        result = [
+            {item[0]: item[1]} for item in [(row.name, row.value) for row in rows]
+        ]
+        info = {k: v for d in result for k, v in d.items()}
+        secid = info.get("SECID", None)
+
+        if not secid:
             continue
-        secid = secid[0]
         try:
             logger.info("adding security description: %s", secid)
-            security = Security(secid=secid, description=description)
+            security = Security(secid=secid, description=description, info=info)
             add_security_description(security)
         except Exception:
             logger.error("couldn't add security description: %s", secid)
