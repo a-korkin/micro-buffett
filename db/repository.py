@@ -51,6 +51,13 @@ def add_security_description(security: Security):
     data = security.__dict__.copy()
     data.pop("_sa_instance_state", None)
     stmt = insert(Security).values(data)
+    stmt = stmt.on_conflict_do_update(
+        index_elements=["secid"],
+        set_=dict(
+            description=stmt.excluded.description,
+            info=stmt.excluded.info,
+        ),
+    )
 
     with engine.connect() as connection:
         connection.execute(stmt)

@@ -313,6 +313,10 @@ def main():
 
     # parsed_coupons = parse_coupons()
     # logger.info("total: %d", len(parsed_coupons))
+    # secs = get_security_descriptions()
+    # for sec in secs:
+    #     print("=================================================")
+    #     print(sec.info)
 
 
 if __name__ == "__main__":
