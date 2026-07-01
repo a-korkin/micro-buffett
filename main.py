@@ -12,6 +12,8 @@ from dotenv import load_dotenv
 from db.repository import (
     add_coupons,
     add_security_description,
+    get_best_choices,
+    get_coupon,
     get_coupons,
     get_security_descriptions,
 )
@@ -309,14 +311,23 @@ def main():
     # candles_show()
     # coupons_show()
     # get_securities()
-    fetch_security_description()
+    # fetch_security_description()
 
     # parsed_coupons = parse_coupons()
     # logger.info("total: %d", len(parsed_coupons))
-    # secs = get_security_descriptions()
+
+    # secs = [
+    #     security
+    #     for security in get_security_descriptions()
+    #     if security.info.get("ISQUALIFIEDINVESTORS") == "0"
+    # ]
     # for sec in secs:
     #     print("=================================================")
     #     print(sec.info)
+
+    result = get_best_choices()
+    for row in result:
+        print(row.isin, row.valueprc)
 
 
 if __name__ == "__main__":

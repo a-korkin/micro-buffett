@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Optional
 
 from sqlalchemy import String
@@ -27,6 +28,24 @@ class Description:
 
     def __str__(self) -> str:
         return f"name: {self.name}, title: {self.title}, value: {self.value}"
+
+
+class BestSecurity:
+    isin: str
+    name: str
+    issuevalue: int
+    coupondate: date
+    recorddate: Optional[date]
+    startdate: Optional[date]
+    initialfacevalue: float
+    facevalue: float
+    faceunit: str
+    value: float
+    valueprc: float
+    value_rub: float
+    secid: str
+    primary_boardid: str
+    info: dict[str, str]
 
 
 class Security(Base):

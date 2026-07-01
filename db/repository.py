@@ -1,10 +1,10 @@
 from typing import cast
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert
 
 from models.coupon import Coupon
-from models.security import Security
+from models.security import BestSecurity, Security
 
 from .engine import engine
 
@@ -47,6 +47,13 @@ def get_coupons() -> list[Coupon]:
         return cast("list[Coupon]", result)
 
 
+def get_coupon(secid: str) -> Coupon:
+    stmt = select(Coupon).where(Coupon.isin == secid)
+    with engine.connect() as connection:
+        result = connection.execute(stmt).first()
+        return cast("Coupon", result)
+
+
 def add_security_description(security: Security):
     data = security.__dict__.copy()
     data.pop("_sa_instance_state", None)
@@ -69,3 +76,19 @@ def get_security_descriptions() -> list[Security]:
     with engine.connect() as connection:
         result = connection.execute(stmt).all()
         return cast("list[Security]", result)
+
+
+def get_best_choices() -> list[BestSecurity]:
+    sql = text("""
+select b.*, a.info
+from public.securities as a
+inner join public.coupons as b on b.isin = a.secid
+where a.info @> '{"ISQUALIFIEDINVESTORS": "0"}'::jsonb
+	and a.info @> '{"HASPROSPECTUS": "1"}'::jsonb
+	and a.info @> '{"COUPONFREQUENCY": "12"}'::jsonb
+    and b.valueprc > 15.0
+order by b.valueprc desc;
+    """)
+    with engine.connect() as connection:
+        result = connection.execute(sql).all()
+        return cast("list[BestSecurity]", result)
