@@ -83,10 +83,8 @@ def get_best_choices() -> list[BestSecurity]:
 select b.*, a.info
 from public.securities as a
 inner join public.coupons as b on b.isin = a.secid
-where a.info @> '{"ISQUALIFIEDINVESTORS": "0"}'::jsonb
-	and a.info @> '{"HASPROSPECTUS": "1"}'::jsonb
-	and a.info @> '{"COUPONFREQUENCY": "12"}'::jsonb
-    and b.valueprc > 15.0
+where a.info @> '{"ISQUALIFIEDINVESTORS": "0", "HASPROSPECTUS": "1", "COUPONFREQUENCY": "12"}'::jsonb
+    and b.valueprc > 20.0
 order by b.valueprc desc;
     """)
     with engine.connect() as connection:
