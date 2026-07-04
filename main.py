@@ -213,13 +213,15 @@ def main():
 
     result = get_best_choices()
     for row in result:
-        fetch_candles(path, row.secid)
+        # fetch_candles(path, row.secid)
 
         file = f"{path}/{row.secid}.csv"
         candles = parse_file(file, Candle)
         last_candle = candles[0]
         secid = file.split("/")[-1].replace(".csv", "")
-        print(f"secid: {secid}, price: {last_candle.close}%, percent: {row.valueprc}%")
+        print(
+            f"secid: {secid}  price: {float(last_candle.close):>6.2f}%  percent: {float(row.valueprc):.2f}%"
+        )
 
         time.sleep(0.1)
 
