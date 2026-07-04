@@ -3,10 +3,13 @@ import json
 import logging
 import os
 import sys
+import time
 from datetime import datetime
+from http import HTTPStatus
 from pathlib import Path
 from typing import Optional
 
+import requests
 from dotenv import load_dotenv
 
 from db.repository import (
@@ -27,6 +30,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 load_dotenv()
+
+ISS_URL = "https://iss.moex.com/iss/engines/stock/markets"
 
 
 class Candle:
@@ -170,6 +175,24 @@ def fetch_security_description():
             logger.error("couldn't add security description: %s", secid)
 
 
+def fetch_candles(secid: str) -> list[Candle]:
+    response = requests.get(
+        f"{ISS_URL}/bonds/securities/{secid}/candles.csv?iss.reverse=true&interval=24"
+    )
+
+    if response.status_code == HTTPStatus.OK:
+        today = datetime.today().date()
+        path = Path(f"tests/data/bonds/{today}/candles")
+        path.mkdir(parents=True, exist_ok=True)
+
+        with open(f"{path}/{secid}.csv", "w", encoding="utf-8") as file:
+            content = response.content.decode().splitlines()[2:]
+            if len(content) > 0:
+                file.write("\n".join(content))
+
+    return []
+
+
 def main():
     # candles_show()
     # coupons_show()
@@ -188,9 +211,17 @@ def main():
     #     print("=================================================")
     #     print(sec.info)
 
-    result = get_best_choices()
-    for row in result:
-        print(row.isin, row.valueprc)
+    # result = get_best_choices()
+    # for row in result:
+    #     time.sleep(0.3)
+    #     candles = fetch_candles(row.secid)
+    #     if len(candles) > 0:
+    #         last_candle = candles[0]
+    #         print(
+    #             f"secid: {row.secid}, coupon: {row.valueprc}%, price: {last_candle.close}%"
+    #         )
+
+    fetch_candles("RU000A10A141")
 
 
 if __name__ == "__main__":
