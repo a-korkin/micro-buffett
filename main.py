@@ -175,22 +175,16 @@ def fetch_security_description():
             logger.error("couldn't add security description: %s", secid)
 
 
-def fetch_candles(secid: str) -> list[Candle]:
+def fetch_candles(path: Path, secid: str):
     response = requests.get(
         f"{ISS_URL}/bonds/securities/{secid}/candles.csv?iss.reverse=true&interval=24"
     )
 
     if response.status_code == HTTPStatus.OK:
-        today = datetime.today().date()
-        path = Path(f"tests/data/bonds/{today}/candles")
-        path.mkdir(parents=True, exist_ok=True)
-
         with open(f"{path}/{secid}.csv", "w", encoding="utf-8") as file:
             content = response.content.decode().splitlines()[2:]
             if len(content) > 0:
                 file.write("\n".join(content))
-
-    return []
 
 
 def main():
@@ -211,17 +205,23 @@ def main():
     #     print("=================================================")
     #     print(sec.info)
 
-    # result = get_best_choices()
-    # for row in result:
-    #     time.sleep(0.3)
-    #     candles = fetch_candles(row.secid)
-    #     if len(candles) > 0:
-    #         last_candle = candles[0]
-    #         print(
-    #             f"secid: {row.secid}, coupon: {row.valueprc}%, price: {last_candle.close}%"
-    #         )
+    # fetch_candles("RU000A10A141")
 
-    fetch_candles("RU000A10A141")
+    today = datetime.today().date()
+    path = Path(f"tests/data/bonds/{today}/candles")
+    path.mkdir(parents=True, exist_ok=True)
+
+    result = get_best_choices()
+    for row in result:
+        fetch_candles(path, row.secid)
+
+        file = f"{path}/{row.secid}.csv"
+        candles = parse_file(file, Candle)
+        last_candle = candles[0]
+        secid = file.split("/")[-1].replace(".csv", "")
+        print(f"secid: {secid}, price: {last_candle.close}%, percent: {row.valueprc}%")
+
+        time.sleep(0.1)
 
 
 if __name__ == "__main__":
