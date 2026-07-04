@@ -78,13 +78,16 @@ def get_security_descriptions() -> list[Security]:
         return cast("list[Security]", result)
 
 
-def get_best_choices() -> list[BestSecurity]:
-    sql = text("""
+def get_best_choices(min_percent: float = 25.0) -> list[BestSecurity]:
+    condition = (
+        '{"ISQUALIFIEDINVESTORS": "0", "HASPROSPECTUS": "1", "COUPONFREQUENCY": "12"}'
+    )
+    sql = text(f"""
 select b.*, a.info
 from public.securities as a
 inner join public.coupons as b on b.isin = a.secid
-where a.info @> '{"ISQUALIFIEDINVESTORS": "0", "HASPROSPECTUS": "1", "COUPONFREQUENCY": "12"}'::jsonb
-    and b.valueprc > 20.0
+where a.info @> '{condition}'::jsonb
+    and b.valueprc >= {min_percent}
 order by b.valueprc desc;
     """)
     with engine.connect() as connection:
