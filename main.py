@@ -20,6 +20,7 @@ from db.repository import (
     get_coupons,
     get_security_descriptions,
 )
+from mailing import send
 from models.coupon import Coupon
 from models.security import Description, Security
 from terminal import run
@@ -229,3 +230,4 @@ def main():
 if __name__ == "__main__":
     # sys.exit(run())
     main()
+    # send()

@@ -1,11 +1,12 @@
 #!/bin/bash
 
+source .env
+
 start=0
 step=50
 from=$(date +%F)
 till=$(date -d"+1 months" +%F)
-base_dir="/home/ss/projects/personal/micro-buffett/tests/data/boundization/${from}"
-base_url="https://iss.moex.com/iss/statistics/engines/stock/markets/bonds/bondization.csv"
+base_dir="${DIR}/bonds/${from}"
 
 if [ "$#" -ne 1 ]; then
     echo "Error: exactly 1 argument required"
@@ -27,7 +28,7 @@ download_csv() {
 }
 
 get_pages() {
-    url="${base_url}\
+    url="${BASE_URL}\
 ?from=${from}&till=${till}&start=${start}&limit=${step}&iss.only=${1}\
 &sort_order=desc&iss.json=extended&lang=ru&is_traded=1"
     download_csv ${url} coupons.cursor
@@ -40,7 +41,7 @@ iterate_through_pages() {
     iteration=0
 
     while [ $start -lt $total ]; do
-        url="${base_url}\
+        url="${BASE_URL}\
 ?from=${from}&till=${till}&start=${start}&limit=${step}&iss.only=${1}\
 &sort_order=desc&iss.json=extended&lang=ru&is_traded=1"
         # print_status
@@ -62,17 +63,26 @@ get_coupons() {
 
 get_info() {
     dir="${base_dir}/securities"
-    url="https://iss.moex.com/iss/securities/${1}.csv?iss.only=description"
+    url="${ISS_HOST}/securities/${1}.csv?iss.only=description"
     print_status
     check_dir_exists ${dir}
     download_csv ${url} ${1}
 }
 
 get_bonds_securities() {
-    url="https://iss.moex.com/iss/engines/stock/markets/bonds/securities.csv?iss.only=securities"
+    url="${ISS_HOST}/engines/stock/markets/bonds/securities.csv?iss.only=securities"
     dir="${base_dir}"
     check_dir_exists ${dir}
     download_csv ${url} "bonds"
+}
+
+send_mail() {
+    curl --ssl-reqd \
+        --url "smtps://${SMTP_SERVER}:${SMTP_PORT}" \
+        --user "${SENDER_EMAIL}:${SENDER_PASSWORD}" \
+        --mail-from "${SENDER_EMAIL}" \
+        --mail-rcpt "${RECIPIENT_EMAIL}" \
+        --upload-file tests/data/mail.txt
 }
 
 case "$1" in
@@ -103,7 +113,11 @@ case "$1" in
         done
     ;;
     "check")
-        printf "%04d" 7
+        # printf "%04d" 7
+        echo $base_dir
+    ;;
+    "smtp")
+        send_mail
     ;;
     *)
         echo "unknown command"
