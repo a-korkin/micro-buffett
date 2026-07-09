@@ -82,7 +82,7 @@ send_mail() {
         --user "${SENDER_EMAIL}:${SENDER_PASSWORD}" \
         --mail-from "${SENDER_EMAIL}" \
         --mail-rcpt "${RECIPIENT_EMAIL}" \
-        --upload-file tests/data/mail.txt
+        --upload-file scripts/mail.txt
 }
 
 case "$1" in

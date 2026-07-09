@@ -1,0 +1,50 @@
+MIME-Version: 1.0
+Content-Type: text/html; charset="utf-8"
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Best choices for Bonds</title>
+    </head>
+    <body>
+        <p>Best choices for Bonds</p>
+        <pre><code>
+secid: RU000A10AHU1  price: 101.85%  percent: 33.00%  name: ОилРесурс 001P-01
+secid: RU000A10BM56  price: 100.85%  percent: 30.50%  name: АПРИ БО-002Р-10
+secid: RU000A10AUG3  price: 100.93%  percent: 29.50%  name: АПРИ БО-002Р-07
+secid: RU000A10DB16  price:  77.13%  percent: 29.00%  name: Оил Ресурс 001P-03
+secid: RU000A10ATR2  price: 105.84%  percent: 28.00%  name: ГЛОРАКС 001P-03
+secid: RU000A10C8H9  price:  91.72%  percent: 28.00%  name: Оил Ресурс 001P-02
+secid: RU000A10AHE5  price: 104.89%  percent: 27.50%  name: Новые технологии 001Р-02
+secid: RU000A10B396  price:   2.69%  percent: 26.50%  name: МОНОПОЛИЯ 001P-04
+secid: RU000A10AEF9  price: 112.14%  percent: 26.50%  name: ПАО "ТГК-14" 001Р-03
+secid: RU000A10ASE2  price: 103.44%  percent: 26.00%  name: РОЛЬФ БО 001Р-07
+secid: RU000A10B8X7  price: 101.14%  percent: 26.00%  name: ДАРС-Девелопмент 001Р-03
+secid: RU000A10B2P6  price: 107.16%  percent: 26.00%  name: АйДи Коллект 001P-01
+secid: RU000A10BFP3  price: 102.10%  percent: 26.00%  name: МВ ФИНАНС 001Р-06
+secid: RU000A10BQ60  price: 104.46%  percent: 25.50%  name: РОЛЬФ БО 001Р-08
+secid: RU000A10BWL7  price:   2.72%  percent: 25.50%  name: МОНОПОЛИЯ 001P-05
+secid: RU000A10BNM4  price: 108.66%  percent: 25.50%  name: АБЗ-1 002P-03
+secid: RU000A10BFJ6  price: 104.92%  percent: 25.50%  name: Полипласт АО П02-БО-04
+secid: RU000A10B9Q9  price: 109.84%  percent: 25.50%  name: ГЛОРАКС 001Р-04
+secid: RU000A10BFX7  price: 101.78%  percent: 25.50%  name: ГК Самолет БО-П16
+secid: RU000A10B0R6  price: 100.31%  percent: 25.50%  name: Кокс ПАО 001P-02
+secid: RU000A10AS28  price: 100.46%  percent: 25.50%  name: Биннофарм Групп 001Р-04
+secid: RU000A10BPN7  price: 105.23%  percent: 25.50%  name: Полипласт АО П02-БО-05
+secid: RU000A10BAP4  price: 103.88%  percent: 25.50%  name: Эталон-Финанс 002Р-03
+secid: RU000A10BQH7  price: 102.95%  percent: 25.25%  name: АйДи Коллект 001P-04
+secid: RU000A10BW88  price: 103.22%  percent: 25.25%  name: АйДи Коллект 001P-05
+secid: RU000A10E6J7  price: 101.98%  percent: 25.25%  name: Страна Девелопмент 002Р-02
+secid: RU000A10AV15  price: 101.05%  percent: 25.25%  name: ВИС ФИНАНС БО-П07
+secid: RU000A10AA10  price: 104.11%  percent: 25.00%  name: ПСБ Лизинг БО-П01
+secid: RU000A10ATS0  price:  72.14%  percent: 25.00%  name: ЕвроТранс БО-001Р-06
+secid: RU000A10CM06  price:  99.00%  percent: 25.00%  name: АПРИ БО-002Р-11
+secid: RU000A10DZH4  price:  99.03%  percent: 25.00%  name: АПРИ БО-002Р-12
+secid: RU000A10AAQ4  price: 103.68%  percent: 25.00%  name: СФО Сплит Финанс 1 01
+secid: RU000A10E747  price: 100.13%  percent: 25.00%  name: ГК Сегежа 003P-10R
+secid: RU000A10B7T7  price: 103.93%  percent: 25.00%  name: СФО ТБ-3 класс А
+secid: RU000A10A141  price:  74.01%  percent: 25.00%  name: ЕвроТранс БО-001Р-05
+secid: RU000A10A3Z4  price: 111.22%  percent: 25.00%  name: ГТЛК БО 002P-04
+        </code></pre>
+    </body>
+</html>
