@@ -20,8 +20,6 @@ from db.repository import (
     get_coupons,
     get_security_descriptions,
 )
-
-# from mailing import send
 from models.coupon import Coupon
 from models.security import Description, Security
 from terminal import run
@@ -223,13 +221,10 @@ def main():
         last_candle = candles[0]
         secid = file.split("/")[-1].replace(".csv", "")
         print(
-            f"secid: {secid}  price: {float(last_candle.close):>6.2f}%  percent: {float(row.valueprc):.2f}%"
+            f"secid: {secid}  price: {float(last_candle.close):>6.2f}%  percent: {float(row.valueprc):.2f}%  name: {row.name}"
         )
-
-        time.sleep(0.1)
 
 
 if __name__ == "__main__":
-    # sys.exit(run())
-    main()
-    # send()
+    sys.exit(run())
+    # main()
