@@ -20,7 +20,8 @@ from db.repository import (
     get_coupons,
     get_security_descriptions,
 )
-from mailing import send
+
+# from mailing import send
 from models.coupon import Coupon
 from models.security import Description, Security
 from terminal import run
@@ -208,7 +209,8 @@ def main():
 
     # fetch_candles("RU000A10A141")
 
-    today = datetime.today().date()
+    # today = datetime.today().date()
+    today = "2026-07-04"
     path = Path(f"tests/data/bonds/{today}/candles")
     path.mkdir(parents=True, exist_ok=True)
 
