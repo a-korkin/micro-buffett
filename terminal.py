@@ -1,4 +1,5 @@
 import logging
+import math
 
 from pyray import (
     Vector2,
@@ -30,18 +31,25 @@ GAP = 20
 
 
 def _draw_scale_y(min: float, max: float):
+    top = math.ceil(max)
+    bottom = math.floor(min)
+
     length = float(HEIGHT - GAP * 2)
-    step = length / (max - min)
-    y = HEIGHT - GAP
-    thick = 2.0
-    while y >= GAP:
-        y -= step
-        left = Vector2(GAP - 7.5, y)
-        right = Vector2(GAP + 7.5, y)
-        draw_line_ex(left, right, thick, BLACK)
+    count_mark = int(top - bottom)
+    print(length, count_mark)
+
+    # length = float(HEIGHT - GAP * 2)
+    # step = length / (float(max) - float(min))
+    # y = HEIGHT - GAP
+    # thick = 2.0
+    # while y >= GAP:
+    #     y -= step
+    #     left = Vector2(GAP - 7.5, y)
+    #     right = Vector2(GAP + 7.5, y)
+    #     draw_line_ex(left, right, thick, BLACK)
 
 
-def _draw_axes():
+def _draw_axes(minc: Candle, maxc: Candle):
     upper_left = Vector2(GAP, GAP)
     lower_left = Vector2(GAP, HEIGHT - GAP)
     lower_right = Vector2(WIDTH - GAP, HEIGHT - GAP)
@@ -49,67 +57,59 @@ def _draw_axes():
 
     # y-axes
     draw_line_ex(upper_left, lower_left, thick, BLACK)
-    _draw_scale_y(212.0, 230.0)
+
+    _min = min(minc.open, minc.close, minc.high, minc.low)
+    _max = min(maxc.open, maxc.close, maxc.high, maxc.low)
+    _draw_scale_y(min=float(_min), max=float(_max))
+
     # x-axes
     draw_line_ex(lower_left, lower_right, thick, BLACK)
-
-    # open: float
-    # close: float
-    # high: float
-    # low: float
-    # value: float
-    # volume: int
-    # begin: datetime
-    # end: datetime
 
 
 def _candle_edges(candles: list[Candle]) -> tuple[Candle, Candle]:
     init = candles[0]
-    min = Candle(init.__dict__)
-    max = Candle(init.__dict__)
+    minc = Candle(init.__dict__)
+    maxc = Candle(init.__dict__)
     for candle in candles[1:]:
-        if candle.open < min.open:
-            min.open = candle.open
-        if candle.close < min.close:
-            min.close = candle.close
-        if candle.high < min.high:
-            min.high = candle.high
-        if candle.low < min.low:
-            min.low = candle.low
-        if candle.value < min.value:
-            min.value = candle.value
-        if candle.volume < min.volume:
-            min.volume = candle.volume
-        if candle.begin < min.begin:
-            min.begin = candle.begin
-        if candle.end < min.end:
-            min.end = candle.end
+        if candle.open < minc.open:
+            minc.open = candle.open
+        if candle.close < minc.close:
+            minc.close = candle.close
+        if candle.high < minc.high:
+            minc.high = candle.high
+        if candle.low < minc.low:
+            minc.low = candle.low
+        if candle.value < minc.value:
+            minc.value = candle.value
+        if candle.volume < minc.volume:
+            minc.volume = candle.volume
+        if candle.begin < minc.begin:
+            minc.begin = candle.begin
+        if candle.end < minc.end:
+            minc.end = candle.end
 
-        if candle.open > max.open:
-            max.open = candle.open
-        if candle.close > max.close:
-            max.close = candle.close
-        if candle.high > max.high:
-            max.high = candle.high
-        if candle.low > max.low:
-            max.low = candle.low
-        if candle.value > max.value:
-            max.value = candle.value
-        if candle.volume > max.volume:
-            max.volume = candle.volume
-        if candle.begin > max.begin:
-            max.begin = candle.begin
-        if candle.end > max.end:
-            max.end = candle.end
+        if candle.open > maxc.open:
+            maxc.open = candle.open
+        if candle.close > maxc.close:
+            maxc.close = candle.close
+        if candle.high > maxc.high:
+            maxc.high = candle.high
+        if candle.low > maxc.low:
+            maxc.low = candle.low
+        if candle.value > maxc.value:
+            maxc.value = candle.value
+        if candle.volume > maxc.volume:
+            maxc.volume = candle.volume
+        if candle.begin > maxc.begin:
+            maxc.begin = candle.begin
+        if candle.end > maxc.end:
+            maxc.end = candle.end
 
-    return min, max
+    return minc, maxc
 
 
 def run(candles: list[Candle]):
-    min, max = _candle_edges(candles)
-    print(min)
-    print(max)
-    return
+    minc, maxc = _candle_edges(candles)
 
     init_window(WIDTH, HEIGHT, "Terminal")
     set_target_fps(60)
@@ -120,7 +120,7 @@ def run(candles: list[Candle]):
     while not window_should_close():
         begin_drawing()
         clear_background(BACKGROUND_COLOR)
-        _draw_axes()
+        _draw_axes(minc, maxc)
         draw_rectangle_v(pos, size, GREEN)
         end_drawing()
     close_window()

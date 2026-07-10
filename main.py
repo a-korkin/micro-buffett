@@ -182,5 +182,5 @@ def main():
 if __name__ == "__main__":
     # candles_show()
     candles = get_candles()
-    sys.exit(run(candles))
+    sys.exit(run(candles[:100]))
     # main()
