@@ -26,6 +26,9 @@ check_dir_exists() {
 
 download_csv() {
     local filename="${DIR}/${2}${3}.csv"
+    local dirpath=$(dirname $filename)
+    check_dir_exists $dirpath
+
     curl -s -X GET ${1} | iconv -f WINDOWS-1251  -t UTF-8 | tail -n +3 > ${filename}
     count=$(grep -c '.' ${filename})
     if [[ $count -le 1 ]]; then
@@ -122,15 +125,18 @@ case "$1" in
     "smtp")
         send_mail
     ;;
-    "check")
+    "candles")
+        start=0
+        secid="sber"
         period=$(date -d"-1 days" +%F)
         iteration=1
 
+        # выкачать свечи по secid за определённый день
         while true; do
-            url="${BASE_URL}/stock/markets/shares/securities/ozon/candles.csv\
+            url="${BASE_URL}/stock/markets/shares/securities/${secid}/candles.csv\
 ?from=${period}&till=${period}&interval=1&start=${start}"
             fn=$(printf "$period_%02d" $iteration)
-            count=$(download_csv $url "candles/ozon/" "${period}_${fn}")
+            count=$(download_csv $url "candles/${secid}/" "${period}_${fn}")
             ((start += count-1))
             ((iteration += 1))
 
