@@ -20,6 +20,7 @@ from db.repository import (
     get_coupons,
     get_security_descriptions,
 )
+from models.candle import Candle
 from models.coupon import Coupon
 from models.security import Description, Security
 from terminal import run
@@ -34,58 +35,6 @@ load_dotenv()
 ISS_URL = "https://iss.moex.com/iss/engines/stock/markets"
 
 
-class Candle:
-    open: float
-    close: float
-    high: float
-    low: float
-    value: float
-    volume: int
-    begin: datetime
-    end: datetime
-
-    def __init__(self, obj: dict):
-        self.open = obj["open"]
-        self.close = obj["close"]
-        self.high = obj["high"]
-        self.low = obj["low"]
-        self.value = obj["value"]
-        self.volume = obj["volume"]
-        self.begin = obj["begin"]
-        self.end = obj["end"]
-
-    def __str__(self) -> str:
-        return (
-            f"open: {float(self.open):.2f}, close: {float(self.close):.2f}, "
-            f"begin: {self.begin}, end: {self.end}, percent: {self.percent():>6.3f}, "
-            f"avg: {self.average():.2f}"
-        )
-
-    def percent(self) -> float:
-        return round(
-            ((float(self.close) - float(self.open)) / float(self.open)) * 100.0, 3
-        )
-
-    def average(self) -> float:
-        return round((float(self.open) + float(self.close)) / 2.0, 2)
-
-    def info(self) -> str:
-        prefix = ""
-        suffix = "\033[0m"
-        if self.open < self.close:
-            prefix = "\033[32m"
-        elif self.open > self.close:
-            prefix = "\033[31m"
-        else:
-            prefix = ""
-            suffix = ""
-
-        return (
-            f"{prefix}begin: {self.begin}, percent: {self.percent():>6.3f}, "
-            f"avg: {self.average():.2f}{suffix}"
-        )
-
-
 def parse_file(filename: str, _type: type) -> list:
     with open(file=filename, mode="r", encoding="utf-8", newline="") as file:
         reader = csv.DictReader(file, delimiter=";")
@@ -96,17 +45,22 @@ def list_files(path: str) -> list[str]:
     return [str(f) for f in Path(path).iterdir() if f.is_file()]
 
 
-def candles_show():
+def get_candles() -> list[Candle]:
     filename = os.getenv("FILENAME") or ""
     candles = parse_file(filename, Candle)
-    min_open: Candle = min(candles, key=lambda c: c.open)
-    max_open: Candle = max(candles, key=lambda c: c.open)
-    max_percent: Candle = max(candles, key=lambda c: c.percent())
-    print(min_open)
-    print(max_open)
-    print(max_percent)
-    # for candle in candles:
-    #     print(candle.info())
+    return candles
+
+
+def candles_show():
+    candles = get_candles()
+    # min_open: Candle = min(candles, key=lambda c: c.open)
+    # max_open: Candle = max(candles, key=lambda c: c.open)
+    # max_percent: Candle = max(candles, key=lambda c: c.percent())
+    # print(min_open)
+    # print(max_open)
+    # print(max_percent)
+    for candle in candles:
+        print(candle.info())
 
 
 def parse_coupons() -> list[Coupon]:
@@ -226,5 +180,7 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(run())
+    # candles_show()
+    candles = get_candles()
+    sys.exit(run(candles))
     # main()
