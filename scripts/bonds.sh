@@ -7,6 +7,7 @@ step=50
 from=$(date +%F)
 till=$(date -d"+1 months" +%F)
 base_dir="${DIR}/bonds/${from}"
+count=0
 
 if [ "$#" -ne 1 ]; then
     echo "Error: exactly 1 argument required"
@@ -24,7 +25,9 @@ check_dir_exists() {
 }
 
 download_csv() {
-    curl -s -X GET ${1} | iconv -f WINDOWS-1251  -t UTF-8 | tail -n +3 > ${dir}/${2}${3}.csv
+    local filename="${DIR}/${2}${3}.csv"
+    curl -s -X GET ${1} | iconv -f WINDOWS-1251  -t UTF-8 | tail -n +3 > ${filename}
+    grep -c '.' ${filename} 
 }
 
 get_pages() {
@@ -112,12 +115,25 @@ case "$1" in
             fi
         done
     ;;
-    "check")
-        # printf "%04d" 7
-        echo $base_dir
-    ;;
     "smtp")
         send_mail
+    ;;
+    "check")
+        period=$(date -d"-1 days" +%F)
+        iteration=1
+
+        while true; do
+            url="${BASE_URL}/stock/markets/shares/securities/ozon/candles.csv\
+?from=${period}&till=${period}&interval=1&start=${start}"
+            fn=$(printf "$period_%02d" $iteration)
+            count=$(download_csv $url "candles/ozon/" "${period}_${fn}")
+            ((start += count-1))
+            ((iteration += 1))
+
+            if [[ $count -le 1 ]]; then
+                break
+            fi
+        done
     ;;
     *)
         echo "unknown command"
