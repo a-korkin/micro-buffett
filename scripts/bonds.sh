@@ -27,7 +27,11 @@ check_dir_exists() {
 download_csv() {
     local filename="${DIR}/${2}${3}.csv"
     curl -s -X GET ${1} | iconv -f WINDOWS-1251  -t UTF-8 | tail -n +3 > ${filename}
-    grep -c '.' ${filename} 
+    count=$(grep -c '.' ${filename})
+    if [[ $count -le 1 ]]; then
+        rm -rf $filename
+    fi
+    echo $count
 }
 
 get_pages() {
