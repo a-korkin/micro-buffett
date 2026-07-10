@@ -8,12 +8,13 @@ from pyray import (
     close_window,
     draw_line_ex,
     draw_rectangle_v,
+    draw_text,
     end_drawing,
     init_window,
     set_target_fps,
     window_should_close,
 )
-from raylib.colors import BLACK
+from raylib.colors import BLACK, WHITE
 
 from models.candle import Candle
 
@@ -29,6 +30,11 @@ WIDTH = 800
 HEIGHT = 600
 GAP = 20
 
+# open: 3235.50, close: 3234.50, begin: 2026-07-09 06:59:00, end: 2026-07-09 06:59:59
+# open: 3298.00, close: 3295.50, begin: 2026-07-09 08:46:00, end: 2026-07-09 08:46:59
+
+# top: 3296, bottom: 3233
+
 
 def _draw_scale_y(min: float, max: float):
     top = math.ceil(max)
@@ -36,22 +42,32 @@ def _draw_scale_y(min: float, max: float):
 
     length = float(HEIGHT - GAP * 2)
     count_mark = int(top - bottom)
-    print(length, count_mark)
+    step_pxl = length / count_mark
+    y = HEIGHT - GAP
+    thick = 2.0
 
-    # length = float(HEIGHT - GAP * 2)
-    # step = length / (float(max) - float(min))
-    # y = HEIGHT - GAP
-    # thick = 2.0
-    # while y >= GAP:
-    #     y -= step
-    #     left = Vector2(GAP - 7.5, y)
-    #     right = Vector2(GAP + 7.5, y)
-    #     draw_line_ex(left, right, thick, BLACK)
+    i = 0
+    while y >= GAP:
+        y -= step_pxl
+        i += 1
+
+        left = Vector2(GAP * 3 - 5, y)
+        right = Vector2(GAP * 3 + 5, y)
+
+        if i % 2 == 0:
+            value = f"{float(bottom + i):.2f}"
+            draw_text(value, GAP - 10, int(y - 4), 8, WHITE)
+
+            left = Vector2(GAP * 3 - 7.5, y)
+            right = Vector2(GAP * 3 + 7.5, y)
+
+        draw_line_ex(left, right, thick, BLACK)
 
 
 def _draw_axes(minc: Candle, maxc: Candle):
-    upper_left = Vector2(GAP, GAP)
-    lower_left = Vector2(GAP, HEIGHT - GAP)
+    # TODO: установить центр координат
+    upper_left = Vector2(GAP * 3, GAP)
+    lower_left = Vector2(GAP * 3, HEIGHT - GAP)
     lower_right = Vector2(WIDTH - GAP, HEIGHT - GAP)
     thick = 2.0
 
