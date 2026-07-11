@@ -215,6 +215,22 @@ class Graph:
             )
             self.axe_y.scales.append(scale)
 
+    def set_candles(self, candles: list[Candle]):
+        self.candles = candles
+        for candle in self.candles:
+            mmin = float(min(candle.open, candle.close))
+            mmax = float(max(candle.open, candle.close))
+
+            position = Vector2(
+                GRAPH.time_to_coord(candle.begin) - GRAPH.step_x / 2.0,
+                GRAPH.sum_to_coord(mmax),
+            )
+            size = Vector2(GRAPH.step_x, GRAPH.step_y * (max(mmax - mmin, GRAPH.thick)))
+            # rec = Rectangle(position.x, position.y, size.x, size.y)
+
+            candle.position.x, candle.position.y = position.x, position.y
+            candle.size.x, candle.size.y = size.x, size.y
+
     def draw_scale_y(self):
         for scale in self.axe_y.scales:
             left = Vector2(scale.position.x - 5, scale.position.y)
@@ -381,6 +397,7 @@ def draw_candles(candles: list[Candle]):
 
 def run(candles: list[Candle]):
     GRAPH.candle_edges(candles)
+    GRAPH.set_candles(candles)
 
     init_window(WIDTH, HEIGHT, "Terminal")
     set_target_fps(FPS)
