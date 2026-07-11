@@ -1,5 +1,6 @@
 import logging
 import math
+from datetime import datetime, timedelta
 
 from pyray import (
     Vector2,
@@ -26,9 +27,11 @@ logger = logging.getLogger(__name__)
 BACKGROUND_COLOR = (39, 51, 56, 255)
 RED = (224, 84, 84, 255)
 GREEN = (43, 87, 72, 255)
-WIDTH = 800
-HEIGHT = 600
+WIDTH = 1600
+HEIGHT = 900
 GAP = 20
+DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
+
 
 # open: 3235.50, close: 3234.50, begin: 2026-07-09 06:59:00, end: 2026-07-09 06:59:59
 # open: 3298.00, close: 3295.50, begin: 2026-07-09 08:46:00, end: 2026-07-09 08:46:59
@@ -40,10 +43,10 @@ def _draw_scale_y(min: float, max: float):
     top = math.ceil(max)
     bottom = math.floor(min)
 
-    length = float(HEIGHT - GAP * 2)
+    length = float(HEIGHT - GAP * 3)
     count_mark = int(top - bottom)
     step_pxl = length / count_mark
-    y = HEIGHT - GAP
+    y = HEIGHT - GAP * 2
     thick = 2.0
 
     i = 0
@@ -64,11 +67,40 @@ def _draw_scale_y(min: float, max: float):
         draw_line_ex(left, right, thick, BLACK)
 
 
+def _draw_scale_x(min_d: datetime, max_d: datetime):
+    # TODO: проверять в каком формате интервалы (минуты, часы, дни)
+    start = datetime.strptime(str(min_d), DATETIME_FMT) - timedelta(minutes=1)
+    stop = datetime.strptime(str(max_d), DATETIME_FMT) + timedelta(minutes=1, seconds=1)
+
+    length = float(WIDTH - GAP * 4)
+    time_diff = (stop - start).total_seconds() / 60
+    count_mark = int(time_diff)
+    step_pxl = length / count_mark
+    thick = 2.0
+    x = GAP * 3
+
+    y_pos = HEIGHT - GAP * 2
+    while start < stop:
+        start += timedelta(minutes=1)
+        x += step_pxl
+
+        up = Vector2(x, y_pos - 5)
+        down = Vector2(x, y_pos + 5)
+
+        if start.minute % 5 == 0:
+            up = Vector2(x, y_pos - 7.5)
+            down = Vector2(x, y_pos + 7.5)
+            value = start.strftime("%H:%M")
+            draw_text(value, int(x) - 10, y_pos + 10, 8, WHITE)
+
+        draw_line_ex(up, down, thick, BLACK)
+
+
 def _draw_axes(minc: Candle, maxc: Candle):
     # TODO: установить центр координат
-    upper_left = Vector2(GAP * 3, GAP)
-    lower_left = Vector2(GAP * 3, HEIGHT - GAP)
-    lower_right = Vector2(WIDTH - GAP, HEIGHT - GAP)
+    upper_left = Vector2(GAP * 3, GAP - 10)
+    lower_left = Vector2(GAP * 3, HEIGHT - GAP * 2)
+    lower_right = Vector2(WIDTH - GAP, HEIGHT - GAP * 2)
     thick = 2.0
 
     # y-axes
@@ -80,6 +112,10 @@ def _draw_axes(minc: Candle, maxc: Candle):
 
     # x-axes
     draw_line_ex(lower_left, lower_right, thick, BLACK)
+    _min = minc.begin
+    _max = maxc.end
+
+    _draw_scale_x(min_d=_min, max_d=_max)
 
 
 def _candle_edges(candles: list[Candle]) -> tuple[Candle, Candle]:
