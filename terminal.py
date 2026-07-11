@@ -33,6 +33,17 @@ GAP = 20
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
 
 
+class Graph:
+    up_left: Vector2
+    bottom_right: Vector2
+    center: Vector2
+
+    def __init__(self, up_left: Vector2, bottom_right: Vector2):
+        self.up_left = up_left
+        self.bottom_right = bottom_right
+        self.center = Vector2(up_left.x, bottom_right.y)
+
+
 # open: 3235.50, close: 3234.50, begin: 2026-07-09 06:59:00, end: 2026-07-09 06:59:59
 # open: 3298.00, close: 3295.50, begin: 2026-07-09 08:46:00, end: 2026-07-09 08:46:59
 
@@ -96,22 +107,23 @@ def _draw_scale_x(min_d: datetime, max_d: datetime):
         draw_line_ex(up, down, thick, BLACK)
 
 
-def _draw_axes(minc: Candle, maxc: Candle):
+def _draw_axes(minc: Candle, maxc: Candle, graph: Graph):
     # TODO: установить центр координат
-    upper_left = Vector2(GAP * 3, GAP - 10)
-    lower_left = Vector2(GAP * 3, HEIGHT - GAP * 2)
-    lower_right = Vector2(WIDTH - GAP, HEIGHT - GAP * 2)
     thick = 2.0
-
     # y-axes
-    draw_line_ex(upper_left, lower_left, thick, BLACK)
+    draw_line_ex(
+        graph.up_left,
+        graph.center,
+        thick,
+        BLACK,
+    )
 
     _min = min(minc.open, minc.close, minc.high, minc.low)
     _max = min(maxc.open, maxc.close, maxc.high, maxc.low)
     _draw_scale_y(min=float(_min), max=float(_max))
 
     # x-axes
-    draw_line_ex(lower_left, lower_right, thick, BLACK)
+    draw_line_ex(graph.center, graph.bottom_right, thick, BLACK)
     _min = minc.begin
     _max = maxc.end
 
@@ -160,11 +172,20 @@ def _candle_edges(candles: list[Candle]) -> tuple[Candle, Candle]:
     return minc, maxc
 
 
+def draw_candles(candles: list[Candle]):
+    pass
+
+
 def run(candles: list[Candle]):
     minc, maxc = _candle_edges(candles)
 
     init_window(WIDTH, HEIGHT, "Terminal")
     set_target_fps(60)
+
+    graph = Graph(
+        up_left=Vector2(GAP * 3, GAP - 10),
+        bottom_right=Vector2(WIDTH - GAP, HEIGHT - GAP * 2),
+    )
 
     pos = Vector2(200.0, 100.0)
     size = Vector2(30.0, 50.0)
@@ -172,7 +193,7 @@ def run(candles: list[Candle]):
     while not window_should_close():
         begin_drawing()
         clear_background(BACKGROUND_COLOR)
-        _draw_axes(minc, maxc)
+        _draw_axes(minc, maxc, graph)
         draw_rectangle_v(pos, size, GREEN)
         end_drawing()
     close_window()
