@@ -1,6 +1,7 @@
 import logging
 import math
 from datetime import datetime, timedelta
+from operator import index
 
 from pyray import (
     Rectangle,
@@ -9,8 +10,8 @@ from pyray import (
     clear_background,
     close_window,
     draw_line_ex,
+    draw_rectangle_lines_ex,
     draw_rectangle_rec,
-    draw_rectangle_v,
     draw_text,
     end_drawing,
     init_window,
@@ -36,10 +37,55 @@ GAP = 20
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
 
 
+class Scale:
+    title: str
+    position: Vector2
+    index: int
+
+    def __init__(self, title: str, position: Vector2, index: int):
+        self.title = title
+        self.position = position
+        self.index = index
+
+
+class Axe:
+    start_point: Vector2
+    end_point: Vector2
+    max_value: float
+    min_value: float
+
+    scales: list[Scale]
+
+    def __init__(
+        self,
+        start_point: Vector2,
+        end_point: Vector2,
+        minc: Candle,
+        maxc: Candle,
+    ):
+        self.start_point = start_point
+        self.end_point = end_point
+
+        _min = float(min(minc.open, minc.close, minc.high, minc.low))
+        _max = float(max(maxc.open, maxc.close, maxc.high, maxc.low))
+
+        self.max_value = float(math.ceil(_max))
+        self.min_value = float(math.floor(_min))
+
+        self.scales = []
+
+
 class Graph:
     up_left: Vector2
     bottom_right: Vector2
     center: Vector2
+
+    axe_x: Axe
+    axe_y: Axe
+
+    candles: list[Candle]
+    minc: Candle
+    maxc: Candle
 
     thick: float = 2.0
 
@@ -56,39 +102,63 @@ class Graph:
         self.up_left = up_left
         self.bottom_right = bottom_right
         self.center = Vector2(up_left.x, bottom_right.y)
+        self.start = datetime.today()
+        self.stop = datetime.today()
+        self.step_y = 0.0
+        self.step_x = 0.0
+        self.max_y = 0.0
+        self.min_y = 0.0
 
-    def draw_scale_y(self, min_y: float, max_y: float):
-        self.max_y = float(math.ceil(max_y))
-        self.min_y = float(math.floor(min_y))
+    def candle_edges(self, candles: list[Candle]):
+        init = candles[0]
 
-        length = float(HEIGHT - GAP * 3)
-        count_mark = int(self.max_y - self.min_y)
-        self.step_y = length / count_mark
+        self.minc = Candle(init.__dict__)
+        self.maxc = Candle(init.__dict__)
 
-        y = HEIGHT - GAP * 2
+        for candle in candles[1:]:
+            if candle.open < self.minc.open:
+                self.minc.open = candle.open
+            if candle.close < self.minc.close:
+                self.minc.close = candle.close
+            if candle.high < self.minc.high:
+                self.minc.high = candle.high
+            if candle.low < self.minc.low:
+                self.minc.low = candle.low
+            if candle.value < self.minc.value:
+                self.minc.value = candle.value
+            if candle.volume < self.minc.volume:
+                self.minc.volume = candle.volume
+            if candle.begin < self.minc.begin:
+                self.minc.begin = candle.begin
+            if candle.end < self.minc.end:
+                self.minc.end = candle.end
 
-        i = 0
-        while y >= GAP:
-            y -= self.step_y
-            i += 1
+            if candle.open > self.maxc.open:
+                self.maxc.open = candle.open
+            if candle.close > self.maxc.close:
+                self.maxc.close = candle.close
+            if candle.high > self.maxc.high:
+                self.maxc.high = candle.high
+            if candle.low > self.maxc.low:
+                self.maxc.low = candle.low
+            if candle.value > self.maxc.value:
+                self.maxc.value = candle.value
+            if candle.volume > self.maxc.volume:
+                self.maxc.volume = candle.volume
+            if candle.begin > self.maxc.begin:
+                self.maxc.begin = candle.begin
+            if candle.end > self.maxc.end:
+                self.maxc.end = candle.end
 
-            left = Vector2(GAP * 3 - 5, y)
-            right = Vector2(GAP * 3 + 5, y)
-
-            if i % 2 == 0:
-                value = f"{float(self.min_y + i):.2f}"
-                draw_text(value, GAP - 10, int(y - 4), 8, WHITE)
-
-                left = Vector2(GAP * 3 - 7.5, y)
-                right = Vector2(GAP * 3 + 7.5, y)
-
-            draw_line_ex(left, right, self.thick, BLACK)
-
-    def draw_scale_x(self, min_d: datetime, max_d: datetime):
+        # x-axe
+        # ====================================================================
+        self.axe_x = Axe(self.center, self.bottom_right, self.minc, self.maxc)
         # TODO: проверять в каком формате интервалы (минуты, часы, дни)
-        self.start = datetime.strptime(str(min_d), DATETIME_FMT) - timedelta(minutes=1)
+        self.start = datetime.strptime(str(self.minc.begin), DATETIME_FMT) - timedelta(
+            minutes=1
+        )
         start = self.start
-        self.stop = datetime.strptime(str(max_d), DATETIME_FMT) + timedelta(
+        self.stop = datetime.strptime(str(self.maxc.begin), DATETIME_FMT) + timedelta(
             minutes=1, seconds=1
         )
 
@@ -97,42 +167,161 @@ class Graph:
         count_mark = int(time_diff)
         self.step_x = length / count_mark
         x = GAP * 3
+        self.axe_x.scales = []
 
         y_pos = HEIGHT - GAP * 2
         while start < self.stop:
             start += timedelta(minutes=1)
             x += self.step_x
 
-            up = Vector2(x, y_pos - 5)
-            down = Vector2(x, y_pos + 5)
+            # up = Vector2(x, y_pos - 5)
+            # down = Vector2(x, y_pos + 5)
+            #
+            # if start.minute % 5 == 0:
+            #     up = Vector2(x, y_pos - 7.5)
+            #     down = Vector2(x, y_pos + 7.5)
+            #     value = start.strftime("%H:%M")
+            #     draw_text(value, int(x) - 10, y_pos + 10, 8, WHITE)
+            #
+            # draw_line_ex(up, down, self.thick, BLACK)
 
-            if start.minute % 5 == 0:
-                up = Vector2(x, y_pos - 7.5)
-                down = Vector2(x, y_pos + 7.5)
-                value = start.strftime("%H:%M")
-                draw_text(value, int(x) - 10, y_pos + 10, 8, WHITE)
+            scale = Scale(
+                title=start.strftime("%H:%M"),
+                position=Vector2(x, y_pos),
+                index=start.minute,
+            )
+            self.axe_x.scales.append(scale)
+
+        # y-axe
+        # ====================================================================
+        self.axe_y = Axe(self.up_left, self.center, self.minc, self.maxc)
+        self.max_y = float(math.ceil(self.axe_y.max_value))
+        self.min_y = float(math.floor(self.axe_y.min_value))
+
+        length = float(HEIGHT - GAP * 3)
+        count_mark = int(self.max_y - self.min_y)
+        self.step_y = length / count_mark
+        self.axe_y.scales = []
+        y = HEIGHT - GAP * 2
+        i = 0
+
+        while y >= GAP:
+            y -= self.step_y
+            i += 1
+            scale = Scale(
+                title=f"{float(self.min_y + i):.2f}",
+                position=Vector2(GAP * 3, y),
+                index=i,
+            )
+            self.axe_y.scales.append(scale)
+
+    def draw_scale_y(self):
+        for scale in self.axe_y.scales:
+            left = Vector2(scale.position.x - 5, scale.position.y)
+            right = Vector2(scale.position.x + 5, scale.position.y)
+
+            if scale.index % 2 == 0:
+                value = f"{float(self.min_y + scale.index):.2f}"
+                draw_text(value, GAP - 10, int(scale.position.y - 4), 8, WHITE)
+
+                left = Vector2(scale.position.x - 7.5, scale.position.y)
+                right = Vector2(scale.position.x + 7.5, scale.position.y)
+
+            draw_line_ex(left, right, self.thick, BLACK)
+
+        # self.max_y = float(math.ceil(self.axe_y.max_value))
+        # self.min_y = float(math.floor(self.axe_y.min_value))
+        #
+        # length = float(HEIGHT - GAP * 3)
+        # count_mark = int(self.max_y - self.min_y)
+        # self.step_y = length / count_mark
+        #
+        # y = HEIGHT - GAP * 2
+        #
+        # i = 0
+        # while y >= GAP:
+        #     y -= self.step_y
+        #     i += 1
+        #
+        #     left = Vector2(GAP * 3 - 5, y)
+        #     right = Vector2(GAP * 3 + 5, y)
+        #
+        #     if i % 2 == 0:
+        #         value = f"{float(self.min_y + i):.2f}"
+        #         draw_text(value, GAP - 10, int(y - 4), 8, WHITE)
+        #
+        #         left = Vector2(GAP * 3 - 7.5, y)
+        #         right = Vector2(GAP * 3 + 7.5, y)
+        #
+        #     draw_line_ex(left, right, self.thick, BLACK)
+
+    def draw_scale_x(self):  # , min_d: datetime, max_d: datetime):
+        # TODO: проверять в каком формате интервалы (минуты, часы, дни)
+        for scale in self.axe_x.scales:
+            up = Vector2(scale.position.x, scale.position.y - 5.0)
+            down = Vector2(scale.position.x, scale.position.y + 5.0)
+
+            if scale.index % 5 == 0:
+                up = Vector2(scale.position.x, scale.position.y - 7.5)
+                down = Vector2(scale.position.x, scale.position.y + 7.5)
+                draw_text(
+                    scale.title,
+                    int(scale.position.x) - 10,
+                    int(scale.position.y) + 10,
+                    8,
+                    WHITE,
+                )
 
             draw_line_ex(up, down, self.thick, BLACK)
+        # self.start = datetime.strptime(str(min_d), DATETIME_FMT) - timedelta(minutes=1)
+        # start = self.start
+        # self.stop = datetime.strptime(str(max_d), DATETIME_FMT) + timedelta(
+        #     minutes=1, seconds=1
+        # )
+        #
+        # length = float(WIDTH - GAP * 4)
+        # time_diff = (self.stop - start).total_seconds() / 60
+        # count_mark = int(time_diff)
+        # self.step_x = length / count_mark
+        # x = GAP * 3
+        #
+        # y_pos = HEIGHT - GAP * 2
+        # while start < self.stop:
+        #     start += timedelta(minutes=1)
+        #     x += self.step_x
+        #
+        #     up = Vector2(x, y_pos - 5)
+        #     down = Vector2(x, y_pos + 5)
+        #
+        #     if start.minute % 5 == 0:
+        #         up = Vector2(x, y_pos - 7.5)
+        #         down = Vector2(x, y_pos + 7.5)
+        #         value = start.strftime("%H:%M")
+        #         draw_text(value, int(x) - 10, y_pos + 10, 8, WHITE)
+        #
+        #     draw_line_ex(up, down, self.thick, BLACK)
 
-    def draw_axes(self, minc: Candle, maxc: Candle):
+    def draw_axes(self):
         # y-axes
-        draw_line_ex(
-            self.up_left,
-            self.center,
-            self.thick,
-            BLACK,
-        )
+        # draw_line_ex(
+        #     self.up_left,
+        #     self.center,
+        #     self.thick,
+        #     BLACK,
+        # )
+        draw_line_ex(self.axe_y.start_point, self.axe_y.end_point, self.thick, BLACK)
 
-        _min = min(minc.open, minc.close, minc.high, minc.low)
-        _max = max(maxc.open, maxc.close, maxc.high, maxc.low)
-        self.draw_scale_y(min_y=float(_min), max_y=float(_max))
+        # _min = min(self.minc.open, self.minc.close, self.minc.high, self.minc.low)
+        # _max = max(self.maxc.open, self.maxc.close, self.maxc.high, self.maxc.low)
+        self.draw_scale_y()
 
         # x-axes
-        draw_line_ex(self.center, self.bottom_right, self.thick, BLACK)
-        _min = minc.begin
-        _max = maxc.end
+        # draw_line_ex(self.center, self.bottom_right, self.thick, BLACK)
+        draw_line_ex(self.axe_x.start_point, self.axe_x.end_point, self.thick, BLACK)
+        # _min = self.minc.begin
+        # _max = self.maxc.end
 
-        self.draw_scale_x(min_d=_min, max_d=_max)
+        self.draw_scale_x()  # min_d=_min, max_d=_max)
 
     def sum_to_coord(self, value: float) -> float:
         return self.center.y - ((float(value) - self.min_y) * self.step_y)
@@ -150,65 +339,39 @@ GRAPH = Graph(
     bottom_right=Vector2(WIDTH - GAP, HEIGHT - GAP * 2),
 )
 
-# open: 3235.50, close: 3234.50, begin: 2026-07-09 06:59:00, end: 2026-07-09 06:59:59
-# open: 3298.00, close: 3295.50, begin: 2026-07-09 08:46:00, end: 2026-07-09 08:46:59
-
-# top: 3296, bottom: 3233
-
-
-def _candle_edges(candles: list[Candle]) -> tuple[Candle, Candle]:
-    init = candles[0]
-    minc = Candle(init.__dict__)
-    maxc = Candle(init.__dict__)
-    for candle in candles[1:]:
-        if candle.open < minc.open:
-            minc.open = candle.open
-        if candle.close < minc.close:
-            minc.close = candle.close
-        if candle.high < minc.high:
-            minc.high = candle.high
-        if candle.low < minc.low:
-            minc.low = candle.low
-        if candle.value < minc.value:
-            minc.value = candle.value
-        if candle.volume < minc.volume:
-            minc.volume = candle.volume
-        if candle.begin < minc.begin:
-            minc.begin = candle.begin
-        if candle.end < minc.end:
-            minc.end = candle.end
-
-        if candle.open > maxc.open:
-            maxc.open = candle.open
-        if candle.close > maxc.close:
-            maxc.close = candle.close
-        if candle.high > maxc.high:
-            maxc.high = candle.high
-        if candle.low > maxc.low:
-            maxc.low = candle.low
-        if candle.value > maxc.value:
-            maxc.value = candle.value
-        if candle.volume > maxc.volume:
-            maxc.volume = candle.volume
-        if candle.begin > maxc.begin:
-            maxc.begin = candle.begin
-        if candle.end > maxc.end:
-            maxc.end = candle.end
-
-    return minc, maxc
-
 
 def draw_candle(candle: Candle):
-    mmin = float(min(candle.open, candle.close))
-    mmax = float(max(candle.open, candle.close))
+    # mmin = float(min(candle.open, candle.close))
+    # mmax = float(max(candle.open, candle.close))
 
-    position = Vector2(
-        (GRAPH.time_to_coord(candle.begin)) - GRAPH.step_x / 2.0,
-        GRAPH.sum_to_coord(mmax),
-    )
-    size = Vector2(GRAPH.step_x, GRAPH.step_y * (max(mmax - mmin, GRAPH.thick)))
+    # position = Vector2(
+    #     GRAPH.time_to_coord(candle.begin) - GRAPH.step_x / 2.0,
+    #     GRAPH.sum_to_coord(mmax),
+    # )
+    # size = Vector2(GRAPH.step_x, GRAPH.step_y * (max(mmax - mmin, GRAPH.thick)))
+    # rec = Rectangle(position.x, position.y, size.x, size.y)
+
     color = GREEN if candle.open < candle.close else RED
-    draw_rectangle_v(position, size, color)
+    draw_rectangle_rec(
+        (candle.position.x, candle.position.y, candle.size.x, candle.size.y),
+        color,
+    )
+    draw_rectangle_lines_ex(
+        (candle.position.x, candle.position.y, candle.size.x, candle.size.y),
+        1.0,
+        BLACK,
+    )
+
+    draw_line_ex(
+        Vector2(
+            GRAPH.time_to_coord(candle.begin) + 0.5, GRAPH.sum_to_coord(candle.low)
+        ),
+        Vector2(
+            GRAPH.time_to_coord(candle.begin) + 0.5, GRAPH.sum_to_coord(candle.high)
+        ),
+        1.0,
+        color,
+    )
 
 
 def draw_candles(candles: list[Candle]):
@@ -217,7 +380,7 @@ def draw_candles(candles: list[Candle]):
 
 
 def run(candles: list[Candle]):
-    minc, maxc = _candle_edges(candles)
+    GRAPH.candle_edges(candles)
 
     init_window(WIDTH, HEIGHT, "Terminal")
     set_target_fps(FPS)
@@ -226,7 +389,8 @@ def run(candles: list[Candle]):
         begin_drawing()
         clear_background(BACKGROUND_COLOR)
 
-        GRAPH.draw_axes(minc, maxc)
+        GRAPH.draw_axes()
         draw_candles(candles)
+
         end_drawing()
     close_window()

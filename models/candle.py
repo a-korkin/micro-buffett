@@ -1,6 +1,15 @@
 from datetime import datetime
 
 
+class Vector2:
+    x: float
+    y: float
+
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+
 class Candle:
     open: float
     close: float
@@ -10,6 +19,8 @@ class Candle:
     volume: int
     begin: datetime
     end: datetime
+    position: Vector2
+    size: Vector2
 
     def __init__(self, obj: dict):
         self.open = obj["open"]
@@ -20,6 +31,8 @@ class Candle:
         self.volume = obj["volume"]
         self.begin = obj["begin"]
         self.end = obj["end"]
+        self.position = Vector2(0.0, 0.0)
+        self.size = Vector2(0.0, 0.0)
 
     def __str__(self) -> str:
         return (
@@ -51,3 +64,7 @@ class Candle:
             f"{prefix}begin: {self.begin}, percent: {self.percent():>6.3f}, "
             f"avg: {self.average():.2f}{suffix}"
         )
+
+    def set_coordinates(self, x: float, y: float, w: float, h: float):
+        self.position = Vector2(x, y)
+        self.size = Vector2(w, h)
