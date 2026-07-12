@@ -275,7 +275,7 @@ GRAPH = Graph(
 )
 
 
-def draw_candle(candle: Candle):
+def _draw_candle(candle: Candle):
     color = GREEN if candle.open <= candle.close else RED
     draw_rectangle_rec(
         (candle.position.x, candle.position.y, candle.size.x, candle.size.y),
@@ -299,9 +299,9 @@ def draw_candle(candle: Candle):
     )
 
 
-def draw_candles(candles: list[Candle]):
+def _draw_candles(candles: list[Candle]):
     for candle in candles:
-        draw_candle(candle)
+        _draw_candle(candle)
 
 
 def run(candles: list[Candle]):
@@ -316,7 +316,7 @@ def run(candles: list[Candle]):
         clear_background(BACKGROUND_COLOR)
 
         GRAPH.draw_axes()
-        draw_candles(candles)
+        _draw_candles(candles)
 
         end_drawing()
     close_window()
