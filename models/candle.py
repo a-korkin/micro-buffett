@@ -1,5 +1,10 @@
 from datetime import datetime
 
+from sqlalchemy import BigInteger, Date, Float, String
+from sqlalchemy.orm import Mapped, mapped_column
+
+from .base import Base
+
 
 class Vector2:
     x: float
@@ -10,17 +15,19 @@ class Vector2:
         self.y = y
 
 
-class Candle:
-    open: float
-    close: float
-    high: float
-    low: float
-    value: float
-    volume: int
-    begin: datetime
-    end: datetime
-    position: Vector2
-    size: Vector2
+class Candle(Base):
+    __tablename__ = "candles"
+    secid: Mapped[str] = mapped_column(String(256), primary_key=True)
+    open: Mapped[float] = mapped_column(Float())
+    close: Mapped[float] = mapped_column(Float())
+    high: Mapped[float] = mapped_column(Float())
+    low: Mapped[float] = mapped_column(Float())
+    value: Mapped[float] = mapped_column(Float())
+    volume: Mapped[int] = mapped_column(BigInteger())
+    begin: Mapped[datetime] = mapped_column(Date(), primary_key=True)
+    end: Mapped[datetime] = mapped_column(Date(), primary_key=True)
+    position: Vector2 = Vector2(0.0, 0.0)
+    size: Vector2 = Vector2(0.0, 0.0)
 
     def __init__(self, obj: dict):
         self.open = obj["open"]

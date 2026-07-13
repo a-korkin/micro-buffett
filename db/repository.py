@@ -3,6 +3,7 @@ from typing import cast
 from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert
 
+from models.candle import Candle
 from models.coupon import Coupon
 from models.security import BestSecurity, Security
 
@@ -93,3 +94,28 @@ order by b.valueprc desc;
     with engine.connect() as connection:
         result = connection.execute(sql).all()
         return cast("list[BestSecurity]", result)
+
+
+def add_candles(candles: list[Candle]):
+    data = []
+    for c in candles:
+        item = c.__dict__.copy()
+        item.pop("_sa_instance_state", None)
+        data.append(item)
+
+    if len(data) > 0:
+        stmt = insert(Candle).values(data)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["secid", "begin", "end"],
+            set_=dict(
+                open=stmt.excluded.open,
+                close=stmt.excluded.close,
+                high=stmt.excluded.high,
+                low=stmt.excluded.low,
+                volume=stmt.excluded.volume,
+            ),
+        )
+
+        with engine.connect() as connection:
+            connection.execute(stmt)
+            connection.commit()
