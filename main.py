@@ -1,4 +1,3 @@
-import csv
 import json
 import logging
 import os
@@ -24,6 +23,7 @@ from models.candle import Candle
 from models.coupon import Coupon
 from models.security import Description, Security
 from terminal import run
+from utils import get_candles, parse_file
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -35,20 +35,8 @@ load_dotenv()
 ISS_URL = "https://iss.moex.com/iss/engines/stock/markets"
 
 
-def parse_file(filename: str, _type: type) -> list:
-    with open(file=filename, mode="r", encoding="utf-8", newline="") as file:
-        reader = csv.DictReader(file, delimiter=";")
-        return [_type(row) for row in reader]
-
-
 def list_files(path: str) -> list[str]:
     return [str(f) for f in Path(path).iterdir() if f.is_file()]
-
-
-def get_candles() -> list[Candle]:
-    filename = os.getenv("FILENAME") or ""
-    candles = parse_file(filename, Candle)
-    return candles
 
 
 def candles_show():
@@ -181,6 +169,5 @@ def main():
 
 if __name__ == "__main__":
     # candles_show()
-    candles = get_candles()
-    sys.exit(run(candles[:100]))
+    sys.exit(run())
     # main()

@@ -19,6 +19,7 @@ from pyray import (
 from raylib.colors import BLACK, WHITE
 
 from models.candle import Candle
+from utils import get_candles
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -250,12 +251,10 @@ class Graph:
     def draw_axes(self):
         # y-axes
         draw_line_ex(self.axe_y.start_point, self.axe_y.end_point, self.thick, BLACK)
-
         self.draw_scale_y()
 
         # x-axes
         draw_line_ex(self.axe_x.start_point, self.axe_x.end_point, self.thick, BLACK)
-
         self.draw_scale_x()  # min_d=_min, max_d=_max)
 
     def sum_to_coord(self, value: float) -> float:
@@ -304,9 +303,14 @@ def _draw_candles(candles: list[Candle]):
         _draw_candle(candle)
 
 
-def run(candles: list[Candle]):
+def init(limit: int = 100):
+    candles = get_candles()[:limit]
     GRAPH.candle_edges(candles)
     GRAPH.set_candles(candles)
+
+
+def run():
+    init()
 
     init_window(WIDTH, HEIGHT, "Terminal")
     set_target_fps(FPS)
@@ -316,7 +320,7 @@ def run(candles: list[Candle]):
         clear_background(BACKGROUND_COLOR)
 
         GRAPH.draw_axes()
-        _draw_candles(candles)
+        _draw_candles(GRAPH.candles)
 
         end_drawing()
     close_window()
