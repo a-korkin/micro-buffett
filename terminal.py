@@ -13,10 +13,12 @@ from pyray import (
     draw_text,
     end_drawing,
     init_window,
+    is_key_pressed,
     set_target_fps,
     window_should_close,
 )
 from raylib.colors import BLACK, WHITE
+from raylib.defines import KEY_LEFT, KEY_RIGHT
 
 from models.candle import Candle
 from utils import get_candles
@@ -303,14 +305,17 @@ def _draw_candles(candles: list[Candle]):
         _draw_candle(candle)
 
 
-def init(limit: int = 100):
-    candles = get_candles()[:limit]
+def init(start: int = 0, stop: int = 100):
+    candles = get_candles()[start:stop]
     GRAPH.candle_edges(candles)
     GRAPH.set_candles(candles)
 
 
 def run():
-    init()
+    step = 50
+    start = 0
+    stop = 100  # start + step
+    init(start=start, stop=stop)
 
     init_window(WIDTH, HEIGHT, "Terminal")
     set_target_fps(FPS)
@@ -321,6 +326,15 @@ def run():
 
         GRAPH.draw_axes()
         _draw_candles(GRAPH.candles)
+
+        if is_key_pressed(KEY_RIGHT):
+            start += step
+            stop += step
+            init(start, stop)
+        if is_key_pressed(KEY_LEFT):
+            start -= step
+            stop -= step
+            init(start, stop)
 
         end_drawing()
     close_window()
