@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, Date, Float, String
+from sqlalchemy import BigInteger, DateTime, Float, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
@@ -24,12 +24,13 @@ class Candle(Base):
     low: Mapped[float] = mapped_column(Float())
     value: Mapped[float] = mapped_column(Float())
     volume: Mapped[int] = mapped_column(BigInteger())
-    begin: Mapped[datetime] = mapped_column(Date(), primary_key=True)
-    end: Mapped[datetime] = mapped_column(Date(), primary_key=True)
+    begin: Mapped[datetime] = mapped_column(DateTime(), primary_key=True)
+    end: Mapped[datetime] = mapped_column(DateTime(), primary_key=True)
     position: Vector2 = Vector2(0.0, 0.0)
     size: Vector2 = Vector2(0.0, 0.0)
 
     def __init__(self, obj: dict):
+        self.secid = obj["secid"]
         self.open = obj["open"]
         self.close = obj["close"]
         self.high = obj["high"]
@@ -43,8 +44,8 @@ class Candle(Base):
 
     def __str__(self) -> str:
         return (
-            f"open: {float(self.open):.2f}, close: {float(self.close):.2f}, "
-            f"begin: {self.begin}, end: {self.end}, percent: {self.percent():>6.3f}, "
+            f"secid: {self.secid}, open: {float(self.open):.2f}, close: {float(self.close):.2f}, "
+            f"begin: {self.begin}, percent: {self.percent():>6.3f}, "
             f"avg: {self.average():.2f}"
         )
 

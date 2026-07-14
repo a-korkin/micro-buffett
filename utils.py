@@ -6,10 +6,10 @@ from typing import Optional
 from models.candle import Candle
 
 
-def parse_file(filename: str, _type: type) -> list:
+def parse_file(filename: str, _type: type, additional: dict = {}) -> list:
     with open(file=filename, mode="r", encoding="utf-8", newline="") as file:
         reader = csv.DictReader(file, delimiter=";")
-        return [_type(row) for row in reader]
+        return [_type({**row, **additional}) for row in reader]
 
 
 def safe_float(value, default=0.0):
@@ -37,5 +37,5 @@ def optional_date(value) -> Optional[date]:
 
 def get_candles(secid: str) -> list[Candle]:
     filename = (os.getenv("FILENAME") or "").replace("{secid}", secid)
-    candles = parse_file(filename, Candle)
+    candles = parse_file(filename, Candle, {"secid": secid})
     return candles

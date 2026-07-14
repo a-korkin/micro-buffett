@@ -12,6 +12,8 @@ import requests
 from dotenv import load_dotenv
 
 from db.repository import (
+    add_candle,
+    add_candles,
     add_coupons,
     add_security_description,
     get_best_choices,
@@ -169,5 +171,8 @@ def main():
 
 if __name__ == "__main__":
     # candles_show()
-    sys.exit(run())
+    # sys.exit(run())
     # main()
+    candles = get_candles("ozon")
+    # add_candle(candles[1])
+    add_candles(candles)

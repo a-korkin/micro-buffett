@@ -96,11 +96,36 @@ order by b.valueprc desc;
         return cast("list[BestSecurity]", result)
 
 
+def add_candle(candle: Candle):
+    item = candle.__dict__.copy()
+    item.pop("_sa_instance_state", None)
+    item.pop("position", None)
+    item.pop("size", None)
+
+    stmt = insert(Candle).values(item)
+    stmt = stmt.on_conflict_do_update(
+        index_elements=["secid", "begin", "end"],
+        set_=dict(
+            open=stmt.excluded.open,
+            close=stmt.excluded.close,
+            high=stmt.excluded.high,
+            low=stmt.excluded.low,
+            volume=stmt.excluded.volume,
+        ),
+    )
+
+    with engine.connect() as connection:
+        connection.execute(stmt)
+        connection.commit()
+
+
 def add_candles(candles: list[Candle]):
     data = []
     for c in candles:
         item = c.__dict__.copy()
         item.pop("_sa_instance_state", None)
+        item.pop("position", None)
+        item.pop("size", None)
         data.append(item)
 
     if len(data) > 0:

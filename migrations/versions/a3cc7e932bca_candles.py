@@ -1,8 +1,8 @@
 """candles
 
-Revision ID: f8dc86488710
+Revision ID: a3cc7e932bca
 Revises: bfa93be2637e
-Create Date: 2026-07-14 09:51:16.181889
+Create Date: 2026-07-14 10:15:07.397881
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'f8dc86488710'
+revision: str = 'a3cc7e932bca'
 down_revision: Union[str, Sequence[str], None] = 'bfa93be2637e'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -29,8 +29,8 @@ def upgrade() -> None:
     sa.Column('low', sa.Float(), nullable=False),
     sa.Column('value', sa.Float(), nullable=False),
     sa.Column('volume', sa.BigInteger(), nullable=False),
-    sa.Column('begin', sa.Date(), nullable=False),
-    sa.Column('end', sa.Date(), nullable=False),
+    sa.Column('begin', sa.DateTime(), nullable=False),
+    sa.Column('end', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('secid', 'begin', 'end')
     )
     # ### end Alembic commands ###
