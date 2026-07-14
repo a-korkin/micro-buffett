@@ -3,6 +3,7 @@ import math
 from datetime import datetime, timedelta
 
 from pyray import (
+    Font,
     Vector2,
     begin_drawing,
     clear_background,
@@ -10,11 +11,14 @@ from pyray import (
     draw_line_ex,
     draw_rectangle_lines_ex,
     draw_rectangle_rec,
-    draw_text,
+    draw_text_ex,
     end_drawing,
     init_window,
     is_key_pressed,
+    load_font,
+    load_font_ex,
     set_target_fps,
+    unload_font,
     window_should_close,
 )
 from raylib.colors import BLACK, WHITE
@@ -36,6 +40,7 @@ WIDTH = 1024  # 1600
 HEIGHT = 768  # 900
 GAP = 20
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
+# FONT = load_font_ex("assets/fonts/Ubuntu-Medium.ttf", 48, None, 0)
 
 
 class Scale:
@@ -98,6 +103,8 @@ class Graph:
 
     step_y: float
     step_x: float
+
+    font: Font
 
     def __init__(self, up_left: Vector2, bottom_right: Vector2):
         self.up_left = up_left
@@ -224,7 +231,14 @@ class Graph:
 
             if scale.index % 2 == 0:
                 value = f"{float(self.min_y + scale.index):.2f}"
-                draw_text(value, GAP - 10, int(scale.position.y - 4), 8, WHITE)
+                draw_text_ex(
+                    self.font,
+                    value,
+                    Vector2(GAP - 10, int(scale.position.y - 4)),
+                    14,
+                    2.0,
+                    WHITE,
+                )
 
                 left = Vector2(scale.position.x - 7.5, scale.position.y)
                 right = Vector2(scale.position.x + 7.5, scale.position.y)
@@ -240,11 +254,15 @@ class Graph:
             if scale.index % 5 == 0:
                 up = Vector2(scale.position.x, scale.position.y - 7.5)
                 down = Vector2(scale.position.x, scale.position.y + 7.5)
-                draw_text(
+                draw_text_ex(
+                    self.font,
                     scale.title,
-                    int(scale.position.x) - 10,
-                    int(scale.position.y) + 10,
-                    8,
+                    Vector2(
+                        int(scale.position.x) - 10,
+                        int(scale.position.y) + 10,
+                    ),
+                    14,
+                    2.0,
                     WHITE,
                 )
 
@@ -320,6 +338,9 @@ def run():
     init_window(WIDTH, HEIGHT, "Terminal")
     set_target_fps(FPS)
 
+    font = load_font("assets/fonts/SourceCodePro-Medium.ttf")
+    GRAPH.font = font
+
     while not window_should_close():
         begin_drawing()
         clear_background(BACKGROUND_COLOR)
@@ -337,4 +358,5 @@ def run():
             init(start, stop)
 
         end_drawing()
+    unload_font(GRAPH.font)
     close_window()

@@ -171,8 +171,7 @@ def main():
 
 if __name__ == "__main__":
     # candles_show()
-    # sys.exit(run())
+    sys.exit(run())
     # main()
-    candles = get_candles("ozon")
-    # add_candle(candles[1])
-    add_candles(candles)
+    # candles = get_candles("sber")
+    # add_candles(candles)
