@@ -8,6 +8,7 @@ class AppSettings(BaseSettings):
     ISS_HOST: str = ""
     BASE_URL: str = ""
     POSTGRES_HOST: str = ""
+    POSTGRES_PORT: int = 5432
     POSTGRES_USER: str = ""
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = ""
