@@ -2,6 +2,7 @@ from typing import cast
 
 from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import load_only
 
 from models.candle import Candle
 from models.coupon import Coupon
@@ -144,3 +145,18 @@ def add_candles(candles: list[Candle]):
         with engine.connect() as connection:
             connection.execute(stmt)
             connection.commit()
+
+
+def get_candles(secid: str, limit: int, offset: int) -> list[Candle]:
+    stmt = (
+        select(Candle)
+        .where(Candle.secid == secid)
+        .order_by(Candle.begin)
+        .limit(limit)
+        .offset(offset)
+    )
+    with engine.connect() as connection:
+        return [
+            Candle(row._mapping)
+            for row in cast("list[Candle]", connection.execute(stmt).all())
+        ]

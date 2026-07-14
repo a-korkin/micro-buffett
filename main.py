@@ -86,13 +86,13 @@ def parse_coupons() -> list[Coupon]:
 #     return result
 
 
-# def coupons_show():
-#     coupons = get_coupons()
-#     isins = [coupon.isin for coupon in coupons]
-#     for isin in isins:
-#         print(isin)
-#     print("===================================================")
-#     print(len(coupons))
+def coupons_show():
+    coupons = get_coupons()
+    isins = [coupon.isin for coupon in coupons]
+    for isin in isins:
+        print(isin)
+    print("===================================================")
+    print(len(coupons))
 
 
 def fetch_security_description():
@@ -170,7 +170,7 @@ def main():
 
 
 if __name__ == "__main__":
-    # candles_show()
+    # coupons_show()
     sys.exit(run())
     # main()
     # candles = get_candles("sber")

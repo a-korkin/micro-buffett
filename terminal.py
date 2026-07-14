@@ -23,8 +23,9 @@ from pyray import (
 from raylib.colors import BLACK, WHITE
 from raylib.defines import KEY_LEFT, KEY_RIGHT
 
+# from utils import get_candles
+from db.repository import get_candles
 from models.candle import Candle
-from utils import get_candles
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -164,7 +165,8 @@ class Graph:
         )
         start = self.start
         self.stop = datetime.strptime(str(self.maxc.begin), DATETIME_FMT) + timedelta(
-            minutes=1, seconds=1
+            minutes=1,
+            seconds=1,
         )
 
         length = self.center.x + self.bottom_right.x
@@ -173,14 +175,14 @@ class Graph:
         self.step_x = length / count_mark
         x = self.center.x
         self.axe_x.scales = []
+        y = self.center.y
 
-        y_pos = self.center.y
-        while start < self.stop:
+        while x < self.bottom_right.x:
             start += timedelta(minutes=1)
             x += self.step_x
             scale = Scale(
                 title=start.strftime("%H:%M"),
-                position=Vector2(x, y_pos),
+                position=Vector2(x, y),
                 index=start.minute,
             )
             self.axe_x.scales.append(scale)
@@ -197,7 +199,7 @@ class Graph:
         y = self.center.y
         i = 0
 
-        while y >= GAP:
+        while y > self.up_left.y:
             y -= self.step_y
             i += 1
             scale = Scale(
@@ -315,8 +317,8 @@ def _draw_candles(graph: Graph):
         _draw_candle(graph, candle)
 
 
-def init(graph: Graph, start: int = 0, stop: int = 100):
-    candles = get_candles("ozon")[start:stop]
+def init(graph: Graph, limit: int = 100, offset: int = 0):
+    candles = get_candles(secid="ozon", limit=limit, offset=offset)
     graph.candle_edges(candles)
     graph.set_candles(candles)
 
@@ -326,10 +328,9 @@ def run():
         up_left=Vector2(GAP * 5, GAP * 10),
         bottom_right=Vector2(WIDTH - GAP, HEIGHT - GAP * 2),
     )
-    step = 75
-    start = 0
-    stop = start + step
-    init(graph, start=start, stop=stop)
+    limit = 100
+    offset = 0
+    init(graph, limit=limit, offset=offset)
 
     init_window(WIDTH, HEIGHT, "Terminal")
     set_target_fps(FPS)
@@ -345,13 +346,11 @@ def run():
         _draw_candles(graph)
 
         if is_key_pressed(KEY_RIGHT):
-            start += step
-            stop += step
-            init(graph, start, stop)
+            offset += limit
+            init(graph, limit, offset)
         if is_key_pressed(KEY_LEFT):
-            start -= step
-            stop -= step
-            init(graph, start, stop)
+            offset -= limit
+            init(graph, limit, offset)
 
         end_drawing()
     unload_font(graph.font)
