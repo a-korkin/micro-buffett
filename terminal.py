@@ -169,14 +169,14 @@ class Graph:
             minutes=1, seconds=1
         )
 
-        length = float(WIDTH - GAP * 4)
+        length = self.center.x + self.bottom_right.x
         time_diff = (self.stop - start).total_seconds() / 60
         count_mark = int(time_diff)
         self.step_x = length / count_mark
-        x = GAP * 3
+        x = self.center.x
         self.axe_x.scales = []
 
-        y_pos = HEIGHT - GAP * 2
+        y_pos = self.center.y
         while start < self.stop:
             start += timedelta(minutes=1)
             x += self.step_x
@@ -192,11 +192,11 @@ class Graph:
         self.max_y = float(math.ceil(self.axe_y.max_value))
         self.min_y = float(math.floor(self.axe_y.min_value))
 
-        length = float(HEIGHT - GAP * 3)
+        length = self.center.y - self.up_left.y
         count_mark = int(self.max_y - self.min_y)
         self.step_y = length / count_mark
         self.axe_y.scales = []
-        y = HEIGHT - GAP * 2
+        y = self.center.y
         i = 0
 
         while y >= GAP:
@@ -204,7 +204,7 @@ class Graph:
             i += 1
             scale = Scale(
                 title=f"{float(self.min_y + i):.2f}",
-                position=Vector2(GAP * 3, y),
+                position=Vector2(self.center.x, y),
                 index=i,
             )
             self.axe_y.scales.append(scale)
@@ -226,16 +226,16 @@ class Graph:
 
     def draw_scale_y(self):
         for scale in self.axe_y.scales:
-            left = Vector2(scale.position.x - 5, scale.position.y)
-            right = Vector2(scale.position.x + 5, scale.position.y)
+            left = Vector2(scale.position.x - 5.0, scale.position.y)
+            right = Vector2(scale.position.x + 5.0, scale.position.y)
 
             if scale.index % 2 == 0:
                 value = f"{float(self.min_y + scale.index):.2f}"
                 draw_text_ex(
                     self.font,
                     value,
-                    Vector2(GAP - 10, int(scale.position.y - 4)),
-                    14,
+                    Vector2(GAP, int(scale.position.y - 8)),
+                    16,
                     2.0,
                     WHITE,
                 )
@@ -258,10 +258,10 @@ class Graph:
                     self.font,
                     scale.title,
                     Vector2(
-                        int(scale.position.x) - 10,
+                        int(scale.position.x) - 22,
                         int(scale.position.y) + 10,
                     ),
-                    14,
+                    16,
                     2.0,
                     WHITE,
                 )
@@ -289,7 +289,7 @@ class Graph:
 
 
 GRAPH = Graph(
-    up_left=Vector2(GAP * 3, GAP - 10),
+    up_left=Vector2(GAP * 5, GAP - 10),
     bottom_right=Vector2(WIDTH - GAP, HEIGHT - GAP * 2),
 )
 
@@ -330,9 +330,9 @@ def init(start: int = 0, stop: int = 100):
 
 
 def run():
-    step = 50
+    step = 75
     start = 0
-    stop = 100  # start + step
+    stop = start + step
     init(start=start, stop=stop)
 
     init_window(WIDTH, HEIGHT, "Terminal")
