@@ -1,8 +1,8 @@
+import csv
 import os
 from datetime import date
 from typing import Optional
 
-import csv
 from models.candle import Candle
 
 

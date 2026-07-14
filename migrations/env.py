@@ -5,9 +5,9 @@ from sqlalchemy import engine_from_config, pool
 
 from config.settings import app_settings
 from models.base import Base
+from models.candle import Candle
 from models.coupon import Coupon
 from models.security import Security
-from models.candle import Candle
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
