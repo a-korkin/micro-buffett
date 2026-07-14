@@ -40,7 +40,7 @@ def list_files(path: str) -> list[str]:
 
 
 def candles_show():
-    candles = get_candles()
+    candles = get_candles("ozon")
     # min_open: Candle = min(candles, key=lambda c: c.open)
     # max_open: Candle = max(candles, key=lambda c: c.open)
     # max_percent: Candle = max(candles, key=lambda c: c.percent())

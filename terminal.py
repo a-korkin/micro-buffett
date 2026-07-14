@@ -306,7 +306,7 @@ def _draw_candles(candles: list[Candle]):
 
 
 def init(start: int = 0, stop: int = 100):
-    candles = get_candles()[start:stop]
+    candles = get_candles("ozon")[start:stop]
     GRAPH.candle_edges(candles)
     GRAPH.set_candles(candles)
 

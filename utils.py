@@ -35,7 +35,7 @@ def optional_date(value) -> Optional[date]:
         return None
 
 
-def get_candles() -> list[Candle]:
-    filename = os.getenv("FILENAME") or ""
+def get_candles(secid: str) -> list[Candle]:
+    filename = (os.getenv("FILENAME") or "").replace("{secid}", secid)
     candles = parse_file(filename, Candle)
     return candles
