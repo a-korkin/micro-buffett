@@ -16,7 +16,6 @@ from pyray import (
     init_window,
     is_key_pressed,
     load_font,
-    load_font_ex,
     set_target_fps,
     unload_font,
     window_should_close,
@@ -37,10 +36,9 @@ BACKGROUND_COLOR = (39, 51, 56, 255)
 RED = (224, 84, 84, 255)
 GREEN = (43, 87, 72, 255)
 WIDTH = 1024  # 1600
-HEIGHT = 768  # 900
+HEIGHT = 900
 GAP = 20
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
-# FONT = load_font_ex("assets/fonts/Ubuntu-Medium.ttf", 48, None, 0)
 
 
 class Scale:
@@ -216,10 +214,10 @@ class Graph:
             mmax = float(max(candle.open, candle.close))
 
             position = Vector2(
-                GRAPH.time_to_coord(candle.begin) - GRAPH.step_x / 2.0,
-                GRAPH.sum_to_coord(mmax),
+                self.time_to_coord(candle.begin) - self.step_x / 2.0,
+                self.sum_to_coord(mmax),
             )
-            size = Vector2(GRAPH.step_x, GRAPH.step_y * (max(mmax - mmin, GRAPH.thick)))
+            size = Vector2(self.step_x, self.step_y * (max(mmax - mmin, self.thick)))
 
             candle.position.x, candle.position.y = position.x, position.y
             candle.size.x, candle.size.y = size.x, size.y
@@ -288,13 +286,7 @@ class Graph:
         return self.center.x + (v * self.step_x)
 
 
-GRAPH = Graph(
-    up_left=Vector2(GAP * 5, GAP - 10),
-    bottom_right=Vector2(WIDTH - GAP, HEIGHT - GAP * 2),
-)
-
-
-def _draw_candle(candle: Candle):
+def _draw_candle(graph: Graph, candle: Candle):
     color = GREEN if candle.open <= candle.close else RED
     draw_rectangle_rec(
         (candle.position.x, candle.position.y, candle.size.x, candle.size.y),
@@ -308,55 +300,59 @@ def _draw_candle(candle: Candle):
 
     draw_line_ex(
         Vector2(
-            GRAPH.time_to_coord(candle.begin) + 0.5, GRAPH.sum_to_coord(candle.low)
+            graph.time_to_coord(candle.begin) + 0.5, graph.sum_to_coord(candle.low)
         ),
         Vector2(
-            GRAPH.time_to_coord(candle.begin) + 0.5, GRAPH.sum_to_coord(candle.high)
+            graph.time_to_coord(candle.begin) + 0.5, graph.sum_to_coord(candle.high)
         ),
         1.0,
         color,
     )
 
 
-def _draw_candles(candles: list[Candle]):
-    for candle in candles:
-        _draw_candle(candle)
+def _draw_candles(graph: Graph):
+    for candle in graph.candles:
+        _draw_candle(graph, candle)
 
 
-def init(start: int = 0, stop: int = 100):
+def init(graph: Graph, start: int = 0, stop: int = 100):
     candles = get_candles("ozon")[start:stop]
-    GRAPH.candle_edges(candles)
-    GRAPH.set_candles(candles)
+    graph.candle_edges(candles)
+    graph.set_candles(candles)
 
 
 def run():
+    graph = Graph(
+        up_left=Vector2(GAP * 5, GAP * 10),
+        bottom_right=Vector2(WIDTH - GAP, HEIGHT - GAP * 2),
+    )
     step = 75
     start = 0
     stop = start + step
-    init(start=start, stop=stop)
+    init(graph, start=start, stop=stop)
 
     init_window(WIDTH, HEIGHT, "Terminal")
     set_target_fps(FPS)
 
     font = load_font("assets/fonts/SourceCodePro-Medium.ttf")
-    GRAPH.font = font
+    graph.font = font
 
     while not window_should_close():
         begin_drawing()
         clear_background(BACKGROUND_COLOR)
 
-        GRAPH.draw_axes()
-        _draw_candles(GRAPH.candles)
+        graph.draw_axes()
+        _draw_candles(graph)
 
         if is_key_pressed(KEY_RIGHT):
             start += step
             stop += step
-            init(start, stop)
+            init(graph, start, stop)
         if is_key_pressed(KEY_LEFT):
             start -= step
             stop -= step
-            init(start, stop)
+            init(graph, start, stop)
 
         end_drawing()
-    unload_font(GRAPH.font)
+    unload_font(graph.font)
     close_window()
