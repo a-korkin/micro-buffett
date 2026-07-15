@@ -322,6 +322,40 @@ def _draw_candles(graph: Graph):
         _draw_candle(graph, candle)
 
 
+def _candle_info(graph: Graph, candle: Candle, position: Vector2):
+    color = GREEN if candle.open <= candle.close else RED
+
+    info = {
+        "open: ": f"{candle.open} ",
+        "close: ": f"{candle.close} ",
+        "high: ": f"{candle.high} ",
+        "low: ": f"{candle.low} ",
+        "percent: ": f"{candle.percent()}%",
+    }
+
+    msg: str = ""
+    offset_pxl: float = 9.0
+    for k, v in info.items():
+        draw_text_ex(
+            graph.font,
+            k,
+            Vector2(position.x + len(msg) * offset_pxl, position.y),
+            16.0,
+            2.0,
+            WHITE,
+        )
+        msg += k
+        draw_text_ex(
+            graph.font,
+            v,
+            Vector2(position.x + len(msg) * offset_pxl, position.y),
+            16.0,
+            2.0,
+            color,
+        )
+        msg += v
+
+
 def _draw_info(graph: Graph):
     mouse_pos = get_mouse_position()
     position = Vector2(graph.up_left.x + GAP, GAP)
@@ -340,12 +374,7 @@ def _draw_info(graph: Graph):
         ):
             continue
 
-        msg = (
-            f"open: {candle.open}, close: {candle.close}, "
-            f"high: {candle.high}, low: {candle.low} ({candle.percent()}%)"
-        )
-        color = GREEN if candle.open <= candle.close else RED
-        draw_text_ex(graph.font, msg, position, 16.0, 2.0, color)
+        _candle_info(graph, candle, position)
 
         # draw dashed pointer
         up = Vector2(candle.position.x + candle.size.x / 2.0, graph.up_left.y)
@@ -370,7 +399,6 @@ def _draw_info(graph: Graph):
         )
 
 
-# DrawLineDashed(Vector2 startPos, Vector2 endPos, int dashSize, int spaceSize, Color color);
 def init(graph: Graph, limit: int = 100, offset: int = 0):
     candles = get_candles(secid="ozon", limit=limit, offset=offset)
     graph.candle_edges(candles)
