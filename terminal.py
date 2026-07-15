@@ -325,46 +325,49 @@ def _draw_candles(graph: Graph):
 def _draw_info(graph: Graph):
     mouse_pos = get_mouse_position()
     position = Vector2(graph.up_left.x + GAP, GAP)
-    if (
+    if not (
         mouse_pos.x >= graph.up_left.x
         and mouse_pos.x <= graph.bottom_right.x
         and mouse_pos.y >= graph.up_left.y
         and mouse_pos.y <= graph.bottom_right.y
     ):
-        for candle in graph.candles:
-            if not (
-                mouse_pos.x >= candle.position.x
-                and mouse_pos.x <= candle.position.x + candle.size.x
-            ):
-                continue
+        return
 
-            msg = (
-                f"open: {candle.open}, close: {candle.close}, "
-                f"high: {candle.high}, low: {candle.low} ({candle.percent()}%)"
-            )
-            color = GREEN if candle.open <= candle.close else RED
-            draw_text_ex(graph.font, msg, position, 16.0, 2.0, color)
+    for candle in graph.candles:
+        if not (
+            mouse_pos.x >= candle.position.x
+            and mouse_pos.x <= candle.position.x + candle.size.x
+        ):
+            continue
 
-            # draw dashed pointer
-            up = Vector2(candle.position.x + candle.size.x / 2.0, graph.up_left.y)
-            down = Vector2(
-                candle.position.x + candle.size.x / 2.0, graph.bottom_right.y
-            )
-            left = Vector2(graph.up_left.x, mouse_pos.y)
-            right = Vector2(graph.bottom_right.x, mouse_pos.y)
-            draw_line_dashed(up, down, 6, 3, WHITE)
-            draw_line_dashed(left, right, 6, 3, WHITE)
+        msg = (
+            f"open: {candle.open}, close: {candle.close}, "
+            f"high: {candle.high}, low: {candle.low} ({candle.percent()}%)"
+        )
+        color = GREEN if candle.open <= candle.close else RED
+        draw_text_ex(graph.font, msg, position, 16.0, 2.0, color)
 
-            # draw candle info
-            msg = f"{graph.coord_to_sum(mouse_pos.y):.2f}"
-            draw_text_ex(
-                graph.font,
-                msg,
-                Vector2(mouse_pos.x + GAP / 2.0, mouse_pos.y - GAP),
-                16.0,
-                2.0,
-                WHITE,
-            )
+        # draw dashed pointer
+        up = Vector2(candle.position.x + candle.size.x / 2.0, graph.up_left.y)
+        down = Vector2(candle.position.x + candle.size.x / 2.0, graph.bottom_right.y)
+        left = Vector2(graph.up_left.x, mouse_pos.y)
+        right = Vector2(graph.bottom_right.x, mouse_pos.y)
+        draw_line_dashed(up, down, 6, 3, WHITE)
+        draw_line_dashed(left, right, 6, 3, WHITE)
+
+        # draw candle info
+        # TODO: check interval minutes, hours, days
+        msg = (
+            f"[{candle.begin.strftime('%H:%M')}] {graph.coord_to_sum(mouse_pos.y):.2f}"
+        )
+        draw_text_ex(
+            graph.font,
+            msg,
+            Vector2(mouse_pos.x + GAP / 2.0, mouse_pos.y - GAP),
+            16.0,
+            2.0,
+            WHITE,
+        )
 
 
 # DrawLineDashed(Vector2 startPos, Vector2 endPos, int dashSize, int spaceSize, Color color);
