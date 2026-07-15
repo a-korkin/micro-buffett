@@ -13,6 +13,7 @@ from pyray import (
     draw_rectangle_rec,
     draw_text_ex,
     end_drawing,
+    get_mouse_position,
     init_window,
     is_key_pressed,
     load_font,
@@ -235,7 +236,7 @@ class Graph:
                     self.font,
                     value,
                     Vector2(GAP, int(scale.position.y - 8)),
-                    16,
+                    16.0,
                     2.0,
                     WHITE,
                 )
@@ -251,7 +252,7 @@ class Graph:
             up = Vector2(scale.position.x, scale.position.y - 5.0)
             down = Vector2(scale.position.x, scale.position.y + 5.0)
 
-            if scale.index % 5 == 0:
+            if scale.index % 10 == 0:
                 up = Vector2(scale.position.x, scale.position.y - 7.5)
                 down = Vector2(scale.position.x, scale.position.y + 7.5)
                 draw_text_ex(
@@ -261,7 +262,7 @@ class Graph:
                         int(scale.position.x) - 22,
                         int(scale.position.y) + 10,
                     ),
-                    16,
+                    16.0,
                     2.0,
                     WHITE,
                 )
@@ -317,6 +318,28 @@ def _draw_candles(graph: Graph):
         _draw_candle(graph, candle)
 
 
+def _draw_info(graph: Graph):
+    mouse_pos = get_mouse_position()
+    position = Vector2(graph.up_left.x + GAP, GAP)
+    if (
+        mouse_pos.x >= graph.up_left.x
+        and mouse_pos.x <= graph.bottom_right.x
+        and mouse_pos.y >= graph.up_left.y
+        and mouse_pos.y <= graph.bottom_right.y
+    ):
+        for candle in graph.candles:
+            if (
+                mouse_pos.x >= candle.position.x
+                and mouse_pos.x <= candle.position.x + candle.size.x
+            ):
+                msg = (
+                    f"open: {candle.open}, close: {candle.close}, "
+                    f"high: {candle.high}, low: {candle.low} ({candle.percent()}%)"
+                )
+                color = GREEN if candle.open <= candle.close else RED
+                draw_text_ex(graph.font, msg, position, 16.0, 2.0, color)
+
+
 def init(graph: Graph, limit: int = 100, offset: int = 0):
     candles = get_candles(secid="ozon", limit=limit, offset=offset)
     graph.candle_edges(candles)
@@ -351,6 +374,8 @@ def run():
         if is_key_pressed(KEY_LEFT):
             offset -= limit
             init(graph, limit, offset)
+
+        _draw_info(graph)
 
         end_drawing()
     unload_font(graph.font)
