@@ -8,6 +8,7 @@ from pyray import (
     begin_drawing,
     clear_background,
     close_window,
+    draw_line_dashed,
     draw_line_ex,
     draw_rectangle_lines_ex,
     draw_rectangle_rec,
@@ -281,6 +282,9 @@ class Graph:
     def sum_to_coord(self, value: float) -> float:
         return self.center.y - ((float(value) - self.min_y) * self.step_y)
 
+    def coord_to_sum(self, y: float) -> float:
+        return self.min_y - ((y - self.center.y) / self.step_y)
+
     def time_to_coord(self, value: datetime) -> float:
         # TODO: проверять интервал (минуты, часы, дни)
         vv = datetime.strptime(str(value), DATETIME_FMT)
@@ -328,18 +332,42 @@ def _draw_info(graph: Graph):
         and mouse_pos.y <= graph.bottom_right.y
     ):
         for candle in graph.candles:
-            if (
+            if not (
                 mouse_pos.x >= candle.position.x
                 and mouse_pos.x <= candle.position.x + candle.size.x
             ):
-                msg = (
-                    f"open: {candle.open}, close: {candle.close}, "
-                    f"high: {candle.high}, low: {candle.low} ({candle.percent()}%)"
-                )
-                color = GREEN if candle.open <= candle.close else RED
-                draw_text_ex(graph.font, msg, position, 16.0, 2.0, color)
+                continue
+
+            msg = (
+                f"open: {candle.open}, close: {candle.close}, "
+                f"high: {candle.high}, low: {candle.low} ({candle.percent()}%)"
+            )
+            color = GREEN if candle.open <= candle.close else RED
+            draw_text_ex(graph.font, msg, position, 16.0, 2.0, color)
+
+            # draw dashed pointer
+            up = Vector2(candle.position.x + candle.size.x / 2.0, graph.up_left.y)
+            down = Vector2(
+                candle.position.x + candle.size.x / 2.0, graph.bottom_right.y
+            )
+            left = Vector2(graph.up_left.x, mouse_pos.y)
+            right = Vector2(graph.bottom_right.x, mouse_pos.y)
+            draw_line_dashed(up, down, 6, 3, WHITE)
+            draw_line_dashed(left, right, 6, 3, WHITE)
+
+            # draw candle info
+            msg = f"{graph.coord_to_sum(mouse_pos.y):.2f}"
+            draw_text_ex(
+                graph.font,
+                msg,
+                Vector2(mouse_pos.x + GAP / 2.0, mouse_pos.y - GAP),
+                16.0,
+                2.0,
+                WHITE,
+            )
 
 
+# DrawLineDashed(Vector2 startPos, Vector2 endPos, int dashSize, int spaceSize, Color color);
 def init(graph: Graph, limit: int = 100, offset: int = 0):
     candles = get_candles(secid="ozon", limit=limit, offset=offset)
     graph.candle_edges(candles)
@@ -349,7 +377,7 @@ def init(graph: Graph, limit: int = 100, offset: int = 0):
 def run():
     graph = Graph(
         up_left=Vector2(GAP * 5, GAP * 10),
-        bottom_right=Vector2(WIDTH - GAP, HEIGHT - GAP * 2),
+        bottom_right=Vector2(WIDTH - GAP, HEIGHT - GAP * 4),
     )
     limit = 100
     offset = 0
