@@ -152,8 +152,8 @@ def get_candles(secid: str, limit: int, offset: int) -> list[Candle]:
         select(Candle)
         .where(Candle.secid == secid)
         .order_by(Candle.begin)
-        .limit(limit)
         .offset(offset)
+        .limit(limit)
     )
     with engine.connect() as connection:
         return [

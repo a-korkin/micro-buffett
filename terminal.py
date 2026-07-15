@@ -14,6 +14,7 @@ from pyray import (
     draw_rectangle_rec,
     draw_text_ex,
     end_drawing,
+    get_frame_time,
     get_mouse_position,
     init_window,
     is_key_pressed,
@@ -23,7 +24,7 @@ from pyray import (
     window_should_close,
 )
 from raylib.colors import BLACK, WHITE
-from raylib.defines import KEY_LEFT, KEY_RIGHT
+from raylib.defines import GLFW_KEY_SPACE, KEY_LEFT, KEY_RIGHT
 
 # from utils import get_candles
 from db.repository import get_candles
@@ -399,6 +400,17 @@ def _draw_info(graph: Graph):
         )
 
 
+def _draw_timer(graph: Graph, timer: float):
+    draw_text_ex(
+        graph.font,
+        f"{timer:.2f}s",
+        Vector2(graph.bottom_right.x - GAP * 5, graph.up_left.y),
+        18.0,
+        2.0,
+        WHITE,
+    )
+
+
 def init(graph: Graph, limit: int = 100, offset: int = 0):
     candles = get_candles(secid="ozon", limit=limit, offset=offset)
     graph.candle_edges(candles)
@@ -420,6 +432,9 @@ def run():
     font = load_font("assets/fonts/SourceCodePro-Medium.ttf")
     graph.font = font
 
+    timer: float = 0.0
+    started: bool = False
+
     while not window_should_close():
         begin_drawing()
         clear_background(BACKGROUND_COLOR)
@@ -428,13 +443,20 @@ def run():
         _draw_candles(graph)
 
         if is_key_pressed(KEY_RIGHT):
-            offset += limit
+            offset += 1  # limit
             init(graph, limit, offset)
         if is_key_pressed(KEY_LEFT):
             offset -= limit
             init(graph, limit, offset)
+        if is_key_pressed(GLFW_KEY_SPACE):
+            started = not started
+        # TODO: получать данные из БД не каждую секунду
+        if started and math.floor(timer) % 1 == 0:
+            offset = math.floor(timer)
+            init(graph, limit, offset)
 
-        _draw_info(graph)
+        timer += get_frame_time()
+        _draw_timer(graph, timer)
 
         end_drawing()
     unload_font(graph.font)
