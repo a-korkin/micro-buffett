@@ -455,11 +455,11 @@ def run():
             init(graph, candles[offset : offset + limit])
         if is_key_pressed(GLFW_KEY_SPACE):
             started = not started
-        # TODO: получать данные из БД не каждую секунду
         second = math.floor(timer)
         if started and second % 1 == 0:
-            offset = second
-            init(graph, candles[offset : offset + limit])
+            if second != offset:
+                offset = second
+                init(graph, candles[offset : offset + limit])
 
         timer += get_frame_time()
         _draw_timer(graph, timer)
