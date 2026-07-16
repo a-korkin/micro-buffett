@@ -1,8 +1,8 @@
+from datetime import datetime
 from typing import cast
 
-from sqlalchemy import select, text
+from sqlalchemy import and_, func, select, text
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import load_only
 
 from models.candle import Candle
 from models.coupon import Coupon
@@ -147,10 +147,15 @@ def add_candles(candles: list[Candle]):
             connection.commit()
 
 
-def get_candles(secid: str, limit: int, offset: int) -> list[Candle]:
+def get_candles(secid: str, period: datetime, limit: int, offset: int) -> list[Candle]:
     stmt = (
         select(Candle)
-        .where(Candle.secid == secid)
+        .where(
+            and_(
+                Candle.secid == secid,
+                func.date(Candle.begin) == func.date(period),
+            )
+        )
         .order_by(Candle.begin)
         .offset(offset)
         .limit(limit)

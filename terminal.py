@@ -26,7 +26,7 @@ from pyray import (
 from raylib.colors import BLACK, WHITE
 from raylib.defines import GLFW_KEY_SPACE, KEY_LEFT, KEY_RIGHT
 
-from db.repository import get_candles
+from db import repository
 from models.candle import Candle
 
 logging.basicConfig(
@@ -119,13 +119,13 @@ class Graph:
         self.max_y = 0.0
         self.min_y = 0.0
 
-    def candle_edges(self, candles: list[Candle]):
-        init = candles[0]
+    def candle_edges(self):  # , candles: list[Candle]):
+        init = self.candles[0]
 
         self.minc = Candle(init.__dict__)
         self.maxc = Candle(init.__dict__)
 
-        for candle in candles[1:]:
+        for candle in self.candles[1:]:
             if candle.open < self.minc.open:
                 self.minc.open = candle.open
             if candle.close < self.minc.close:
@@ -212,8 +212,8 @@ class Graph:
             )
             self.axe_y.scales.append(scale)
 
-    def set_candles(self, candles: list[Candle]):
-        self.candles = candles
+    def set_candles(self):  # , candles: list[Candle]):
+        # self.candles = candles
         for candle in self.candles:
             mmin = float(min(candle.open, candle.close))
             mmax = float(max(candle.open, candle.close))
@@ -414,10 +414,16 @@ def _draw_timer(graph: Graph, timer: float):
     )
 
 
-def init(graph: Graph, limit: int = 100, offset: int = 0):
-    candles = get_candles(secid="ozon", limit=limit, offset=offset)
-    graph.candle_edges(candles)
-    graph.set_candles(candles)
+def init(graph: Graph, limit: int, offset: int):
+    period = datetime.strptime("2026-07-09", "%Y-%m-%d")
+    graph.candles = repository.get_candles(
+        secid="ozon",
+        period=period,
+        limit=limit,
+        offset=offset,
+    )
+    graph.candle_edges()  # graph.candles)
+    graph.set_candles()  # candles)
 
 
 def run():
