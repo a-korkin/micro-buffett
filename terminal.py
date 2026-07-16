@@ -26,7 +26,6 @@ from pyray import (
 from raylib.colors import BLACK, WHITE
 from raylib.defines import GLFW_KEY_SPACE, KEY_LEFT, KEY_RIGHT
 
-# from utils import get_candles
 from db.repository import get_candles
 from models.candle import Candle
 
@@ -43,6 +42,7 @@ WIDTH = 1024  # 1600
 HEIGHT = 900
 GAP = 20
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
+STEP_X = 10.0
 
 
 class Scale:
@@ -104,7 +104,7 @@ class Graph:
     stop: datetime
 
     step_y: float
-    step_x: float
+    # step_x: float
 
     font: Font
 
@@ -115,7 +115,7 @@ class Graph:
         self.start = datetime.today()
         self.stop = datetime.today()
         self.step_y = 0.0
-        self.step_x = 0.0
+        # self.step_x = 0.0
         self.max_y = 0.0
         self.min_y = 0.0
 
@@ -175,14 +175,14 @@ class Graph:
         length = self.center.x + self.bottom_right.x
         time_diff = (self.stop - start).total_seconds() / 60
         count_mark = int(time_diff)
-        self.step_x = length / count_mark
+        # self.step_x = length / count_mark
         x = self.center.x
         self.axe_x.scales = []
         y = self.center.y
 
         while x < self.bottom_right.x:
             start += timedelta(minutes=1)
-            x += self.step_x
+            x += STEP_X  # self.step_x
             scale = Scale(
                 title=start.strftime("%H:%M"),
                 position=Vector2(x, y),
@@ -219,10 +219,12 @@ class Graph:
             mmax = float(max(candle.open, candle.close))
 
             position = Vector2(
-                self.time_to_coord(candle.begin) - self.step_x / 2.0,
+                self.time_to_coord(candle.begin) - STEP_X / 2.0,  # self.step_x / 2.0,
                 self.sum_to_coord(mmax),
             )
-            size = Vector2(self.step_x, self.step_y * (max(mmax - mmin, self.thick)))
+            # size = Vector2(self.step_x, self.step_y * (max(mmax - mmin, self.thick)))
+            y = self.step_y * (mmax - mmin)
+            size = Vector2(STEP_X, 3.0 if y == 0.0 else y)
 
             candle.position.x, candle.position.y = position.x, position.y
             candle.size.x, candle.size.y = size.x, size.y
@@ -291,7 +293,8 @@ class Graph:
         vv = datetime.strptime(str(value), DATETIME_FMT)
         v = (vv - self.start).total_seconds() / 60
 
-        return self.center.x + (v * self.step_x)
+        # return self.center.x + (v * self.step_x)
+        return self.center.x + (v * STEP_X)
 
 
 def _draw_candle(graph: Graph, candle: Candle):
@@ -422,7 +425,7 @@ def run():
         up_left=Vector2(GAP * 5, GAP * 10),
         bottom_right=Vector2(WIDTH - GAP, HEIGHT - GAP * 4),
     )
-    limit = 100
+    limit = int(WIDTH / STEP_X)
     offset = 0
     init(graph, limit=limit, offset=offset)
 
@@ -451,12 +454,15 @@ def run():
         if is_key_pressed(GLFW_KEY_SPACE):
             started = not started
         # TODO: получать данные из БД не каждую секунду
-        if started and math.floor(timer) % 1 == 0:
-            offset = math.floor(timer)
+        second = math.floor(timer)
+        if started and second % 1 == 0:
+            offset = second
             init(graph, limit, offset)
 
         timer += get_frame_time()
         _draw_timer(graph, timer)
+
+        _draw_info(graph)
 
         end_drawing()
     unload_font(graph.font)
