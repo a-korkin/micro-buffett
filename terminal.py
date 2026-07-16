@@ -104,7 +104,6 @@ class Graph:
     stop: datetime
 
     step_y: float
-    # step_x: float
 
     font: Font
 
@@ -115,11 +114,10 @@ class Graph:
         self.start = datetime.today()
         self.stop = datetime.today()
         self.step_y = 0.0
-        # self.step_x = 0.0
         self.max_y = 0.0
         self.min_y = 0.0
 
-    def candle_edges(self):  # , candles: list[Candle]):
+    def candle_edges(self):
         init = self.candles[0]
 
         self.minc = Candle(init.__dict__)
@@ -175,14 +173,13 @@ class Graph:
         length = self.center.x + self.bottom_right.x
         time_diff = (self.stop - start).total_seconds() / 60
         count_mark = int(time_diff)
-        # self.step_x = length / count_mark
         x = self.center.x
         self.axe_x.scales = []
         y = self.center.y
 
-        while x < self.bottom_right.x:
+        while x < self.axe_x.end_point.x - STEP_X:
             start += timedelta(minutes=1)
-            x += STEP_X  # self.step_x
+            x += STEP_X
             scale = Scale(
                 title=start.strftime("%H:%M"),
                 position=Vector2(x, y),
@@ -202,7 +199,7 @@ class Graph:
         y = self.center.y
         i = 0
 
-        while y > self.up_left.y:
+        while y > self.axe_y.start_point.y:
             y -= self.step_y
             i += 1
             scale = Scale(
@@ -212,17 +209,16 @@ class Graph:
             )
             self.axe_y.scales.append(scale)
 
-    def set_candles(self):  # , candles: list[Candle]):
+    def set_candles(self):
         # self.candles = candles
         for candle in self.candles:
             mmin = float(min(candle.open, candle.close))
             mmax = float(max(candle.open, candle.close))
 
             position = Vector2(
-                self.time_to_coord(candle.begin) - STEP_X / 2.0,  # self.step_x / 2.0,
+                self.time_to_coord(candle.begin) - STEP_X / 2.0,
                 self.sum_to_coord(mmax),
             )
-            # size = Vector2(self.step_x, self.step_y * (max(mmax - mmin, self.thick)))
             y = self.step_y * (mmax - mmin)
             size = Vector2(STEP_X, 3.0 if y == 0.0 else y)
 
@@ -250,7 +246,7 @@ class Graph:
 
             draw_line_ex(left, right, self.thick, BLACK)
 
-    def draw_scale_x(self):  # , min_d: datetime, max_d: datetime):
+    def draw_scale_x(self):
         # TODO: проверять в каком формате интервалы (минуты, часы, дни)
         for scale in self.axe_x.scales:
             up = Vector2(scale.position.x, scale.position.y - 5.0)
@@ -292,8 +288,6 @@ class Graph:
         # TODO: проверять интервал (минуты, часы, дни)
         vv = datetime.strptime(str(value), DATETIME_FMT)
         v = (vv - self.start).total_seconds() / 60
-
-        # return self.center.x + (v * self.step_x)
         return self.center.x + (v * STEP_X)
 
 
@@ -414,26 +408,28 @@ def _draw_timer(graph: Graph, timer: float):
     )
 
 
-def init(graph: Graph, limit: int, offset: int):
-    period = datetime.strptime("2026-07-09", "%Y-%m-%d")
-    graph.candles = repository.get_candles(
-        secid="ozon",
-        period=period,
-        limit=limit,
-        offset=offset,
-    )
-    graph.candle_edges()  # graph.candles)
-    graph.set_candles()  # candles)
+def init(graph: Graph, candle_slice: list[Candle]):
+    graph.candles = candle_slice
+    graph.candle_edges()
+    graph.set_candles()
 
 
 def run():
+    period = datetime.strptime("2026-07-09", "%Y-%m-%d")
+    candles = repository.get_candles(
+        secid="ozon",
+        period=period,
+        limit=1000,
+        offset=0,
+    )
+
     graph = Graph(
         up_left=Vector2(GAP * 5, GAP * 10),
         bottom_right=Vector2(WIDTH - GAP, HEIGHT - GAP * 4),
     )
-    limit = int(WIDTH / STEP_X)
+    limit = int((graph.bottom_right.x - graph.center.x) / STEP_X)
     offset = 0
-    init(graph, limit=limit, offset=offset)
+    init(graph, candles[offset:limit])
 
     init_window(WIDTH, HEIGHT, "Terminal")
     set_target_fps(FPS)
@@ -452,18 +448,18 @@ def run():
         _draw_candles(graph)
 
         if is_key_pressed(KEY_RIGHT):
-            offset += 1  # limit
-            init(graph, limit, offset)
+            offset += 1
+            init(graph, candles[offset : offset + limit])
         if is_key_pressed(KEY_LEFT):
-            offset -= limit
-            init(graph, limit, offset)
+            offset -= 1
+            init(graph, candles[offset : offset + limit])
         if is_key_pressed(GLFW_KEY_SPACE):
             started = not started
         # TODO: получать данные из БД не каждую секунду
         second = math.floor(timer)
         if started and second % 1 == 0:
             offset = second
-            init(graph, limit, offset)
+            init(graph, candles[offset : offset + limit])
 
         timer += get_frame_time()
         _draw_timer(graph, timer)
