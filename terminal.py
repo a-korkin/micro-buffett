@@ -228,6 +228,9 @@ class Graph:
 
     def draw_scale_y(self):
         for scale in self.axe_y.scales:
+            if scale.position.y < self.up_left.y:
+                continue
+
             left = Vector2(scale.position.x - 5.0, scale.position.y)
             right = Vector2(scale.position.x + 5.0, scale.position.y)
 
