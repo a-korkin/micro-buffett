@@ -192,13 +192,24 @@ class Graph:
             start += delta  # timedelta(minutes=1)
             x += STEP_X
             title = start.strftime("%H:%M")
-            print(start)
             scale = Scale(
                 title=title,
                 position=Vector2(x, y),
-                index=start.minute,
+                index=start.hour * 100 + start.minute,
             )
             self.axe_x.scales.append(scale)
+
+        # for candle in self.candles:
+        #     title = candle.begin.strftime("%H:%M")
+        #     scale = Scale(
+        #         title=title,
+        #         position=Vector2(candle.position.x, y),
+        #         index=start.hour * 100 + start.minute,
+        #     )
+        #     self.axe_x.scales.append(scale)
+        #
+        # print("==============================")
+        # print(len(self.axe_x.scales))
 
         # y-axe
         self.axe_y = Axe(self.up_left, self.center, self.minc, self.maxc)
@@ -223,7 +234,6 @@ class Graph:
             self.axe_y.scales.append(scale)
 
     def set_candles(self):
-        # self.candles = candles
         for candle in self.candles:
             mmin = float(min(candle.open, candle.close))
             mmax = float(max(candle.open, candle.close))
@@ -271,7 +281,9 @@ class Graph:
             if (
                 self.interval == repository.Interval.min_1 and scale.index % 10 == 0
             ) or (
-                self.interval == repository.Interval.min_15 and scale.index % 15 == 0
+                self.interval == repository.Interval.min_15
+                and (scale.index % 100) == 0
+                and (scale.index // 100) % 2 == 0
             ):
                 up = Vector2(scale.position.x, scale.position.y - 7.5)
                 down = Vector2(scale.position.x, scale.position.y + 7.5)
@@ -306,9 +318,13 @@ class Graph:
 
     def time_to_coord(self, value: datetime) -> float:
         # TODO: проверять интервал (минуты, часы, дни)
-        vv = datetime.strptime(str(value), DATETIME_FMT)
-        v = (vv - self.start).total_seconds() / 60
-        return self.center.x + (v * STEP_X)
+        datetime_val = datetime.strptime(str(value), DATETIME_FMT)
+        y_val: float = 0.0
+        if self.interval == repository.Interval.min_1:
+            y_val = (datetime_val - self.start).total_seconds() / 60
+        if self.interval == repository.Interval.min_15:
+            y_val = ((datetime_val - self.start).total_seconds() / 60) / 15
+        return self.center.x + (y_val * STEP_X)
 
 
 def _draw_candle(graph: Graph, candle: Candle):
