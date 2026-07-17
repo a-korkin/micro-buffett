@@ -89,6 +89,8 @@ class Graph:
     bottom_right: Vector2
     center: Vector2
 
+    interval: repository.Interval
+
     axe_x: Axe
     axe_y: Axe
 
@@ -108,10 +110,16 @@ class Graph:
 
     font: Font
 
-    def __init__(self, up_left: Vector2, bottom_right: Vector2):
+    def __init__(
+        self,
+        up_left: Vector2,
+        bottom_right: Vector2,
+        interval: repository.Interval,
+    ):
         self.up_left = up_left
         self.bottom_right = bottom_right
         self.center = Vector2(up_left.x, bottom_right.y)
+        self.interval = interval
         self.start = datetime.today()
         self.stop = datetime.today()
         self.step_y = 0.0
@@ -162,27 +170,31 @@ class Graph:
         # x-axe
         self.axe_x = Axe(self.center, self.bottom_right, self.minc, self.maxc)
         # TODO: проверять в каком формате интервалы (минуты, часы, дни)
-        self.start = datetime.strptime(str(self.minc.begin), DATETIME_FMT) - timedelta(
-            minutes=1
-        )
+        delta = timedelta(minutes=1)
+        if self.interval == repository.Interval.min_15:
+            delta = timedelta(minutes=15)
+        self.start = datetime.strptime(str(self.minc.begin), DATETIME_FMT) - delta
         start = self.start
-        self.stop = datetime.strptime(str(self.maxc.begin), DATETIME_FMT) + timedelta(
-            minutes=1,
-            seconds=1,
+        self.stop = (
+            datetime.strptime(str(self.maxc.begin), DATETIME_FMT)
+            + delta
+            + timedelta(seconds=1)
         )
 
         length = self.center.x + self.bottom_right.x
-        time_diff = (self.stop - start).total_seconds() / 60
-        count_mark = int(time_diff)
+        # time_diff = (self.stop - start).total_seconds() / 60
+        # count_mark = int(time_diff)
         x = self.center.x
         self.axe_x.scales = []
         y = self.center.y
 
         while x < self.axe_x.end_point.x - STEP_X:
-            start += timedelta(minutes=1)
+            start += delta  # timedelta(minutes=1)
             x += STEP_X
+            title = start.strftime("%H:%M")
+            print(start)
             scale = Scale(
-                title=start.strftime("%H:%M"),
+                title=title,
                 position=Vector2(x, y),
                 index=start.minute,
             )
@@ -256,7 +268,11 @@ class Graph:
             up = Vector2(scale.position.x, scale.position.y - 5.0)
             down = Vector2(scale.position.x, scale.position.y + 5.0)
 
-            if scale.index % 10 == 0:
+            if (
+                self.interval == repository.Interval.min_1 and scale.index % 10 == 0
+            ) or (
+                self.interval == repository.Interval.min_15 and scale.index % 15 == 0
+            ):
                 up = Vector2(scale.position.x, scale.position.y - 7.5)
                 down = Vector2(scale.position.x, scale.position.y + 7.5)
                 draw_text_ex(
@@ -420,9 +436,11 @@ def init(graph: Graph, candle_slice: list[Candle]):
 
 def run():
     period = datetime.strptime("2026-07-09", "%Y-%m-%d")
+    interval = repository.Interval.min_15
     candles = repository.get_candles(
         secid="ozon",
         period=period,
+        interval=interval,
         limit=1000,
         offset=0,
     )
@@ -430,6 +448,7 @@ def run():
     graph = Graph(
         up_left=Vector2(GAP * 5, GAP * 10),
         bottom_right=Vector2(WIDTH - GAP, HEIGHT - GAP * 4),
+        interval=interval,
     )
     start = 0
     stop = int((graph.bottom_right.x - graph.center.x) / STEP_X)

@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from typing import cast
 
 from sqlalchemy import and_, func, select, text
@@ -147,21 +148,51 @@ def add_candles(candles: list[Candle]):
             connection.commit()
 
 
-def get_candles(secid: str, period: datetime, limit: int, offset: int) -> list[Candle]:
-    stmt = (
-        select(Candle)
-        .where(
-            and_(
-                Candle.secid == secid,
-                func.date(Candle.begin) == func.date(period),
-            )
-        )
-        .order_by(Candle.begin)
-        .offset(offset)
-        .limit(limit)
-    )
+class Interval(Enum):
+    min_1 = "1 minutes"
+    min_15 = "15 minutes"
+
+
+def get_candles(
+    secid: str,
+    period: datetime,
+    interval: Interval,
+    limit: int,
+    offset: int,
+) -> list[Candle]:
+    if interval == Interval.min_1:
+        sql = text(f"""
+select 
+    "secid", "open", "close", "high", "low", "value", "volume", "begin", "end"
+from public.candles
+where "secid" = '{secid}'
+    and "begin"::date = '{period}'::date
+order by "begin"
+offset {offset}
+limit {limit};""")
+    else:
+        sql = text(f"""
+select 
+	a."secid", avg(a."open") as "open", avg(a."close") as "close", 
+	avg(a."high") as "high", avg(a."low") as "low", 
+	avg(a."value") as "value", avg(a."volume") as "volume", 
+	a."begin", a."end"
+from
+(
+	select 
+		"secid", "open", "close", "high", "low", "value", "volume", 
+		date_bin('{interval.value}', "begin", "begin"::date) as "begin",
+		date_bin('{interval.value}', "begin", "begin"::date) + '{interval.value} - 1 seconds'::interval as "end"
+	from public.candles
+	where "secid" = '{secid}'
+) as a
+group by a."secid", a."begin", a."end"
+order by a."begin"
+offset {offset}
+limit {limit};""")
+
     with engine.connect() as connection:
         return [
             Candle(row._mapping)
-            for row in cast("list[Candle]", connection.execute(stmt).all())
+            for row in cast("list[Candle]", connection.execute(sql).all())
         ]
