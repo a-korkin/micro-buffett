@@ -17,6 +17,7 @@ from pyray import (
     get_frame_time,
     get_mouse_position,
     init_window,
+    is_key_down,
     is_key_pressed,
     load_font,
     set_target_fps,
@@ -427,9 +428,9 @@ def run():
         up_left=Vector2(GAP * 5, GAP * 10),
         bottom_right=Vector2(WIDTH - GAP, HEIGHT - GAP * 4),
     )
-    limit = int((graph.bottom_right.x - graph.center.x) / STEP_X)
-    offset = 0
-    init(graph, candles[offset:limit])
+    start = 0
+    stop = int((graph.bottom_right.x - graph.center.x) / STEP_X)
+    init(graph, candles[start:stop])
 
     init_window(WIDTH, HEIGHT, "Terminal")
     set_target_fps(FPS)
@@ -438,7 +439,7 @@ def run():
     graph.font = font
 
     timer: float = 0.0
-    started: bool = False
+    is_started: bool = False
 
     while not window_should_close():
         begin_drawing()
@@ -448,18 +449,18 @@ def run():
         _draw_candles(graph)
 
         if is_key_pressed(KEY_RIGHT):
-            offset += 1
-            init(graph, candles[offset : offset + limit])
+            start += 1
+            init(graph, candles[start : start + stop])
         if is_key_pressed(KEY_LEFT):
-            offset -= 1
-            init(graph, candles[offset : offset + limit])
+            start -= 1
+            init(graph, candles[start : start + stop])
         if is_key_pressed(GLFW_KEY_SPACE):
-            started = not started
+            is_started = not is_started
         second = math.floor(timer)
-        if started and second % 1 == 0:
-            if second != offset:
-                offset = second
-                init(graph, candles[offset : offset + limit])
+        if is_started and second % 1 == 0:
+            if second != start:
+                start = second
+                init(graph, candles[start : start + stop])
 
         timer += get_frame_time()
         _draw_timer(graph, timer)

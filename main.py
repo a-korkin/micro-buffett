@@ -173,5 +173,6 @@ if __name__ == "__main__":
     # coupons_show()
     sys.exit(run())
     # main()
-    # candles = get_candles("sber")
+
+    # candles = get_candles("ozon")
     # add_candles(candles)
