@@ -430,6 +430,7 @@ def run():
     )
     start = 0
     stop = int((graph.bottom_right.x - graph.center.x) / STEP_X)
+    total = len(candles)
     init(graph, candles[start:stop])
 
     init_window(WIDTH, HEIGHT, "Terminal")
@@ -445,24 +446,36 @@ def run():
         begin_drawing()
         clear_background(BACKGROUND_COLOR)
 
+        timer += get_frame_time()
+
         graph.draw_axes()
         _draw_candles(graph)
 
         if is_key_pressed(KEY_RIGHT):
             start += 1
-            init(graph, candles[start : start + stop])
+            stop += 1
+            init(graph, candles[start:stop])
         if is_key_pressed(KEY_LEFT):
             start -= 1
-            init(graph, candles[start : start + stop])
+            stop -= 1
+            init(graph, candles[start:stop])
+
         if is_key_pressed(GLFW_KEY_SPACE):
             is_started = not is_started
-        second = math.floor(timer)
-        if is_started and second % 1 == 0:
-            if second != start:
-                start = second
-                init(graph, candles[start : start + stop])
+            if is_started:
+                timer = float(start)
 
-        timer += get_frame_time()
+        seconds = math.floor(timer)
+        if is_started and seconds % 1 == 0:
+            if seconds > start:
+                start = seconds
+                stop += 1
+                if stop <= total:
+                    init(graph, candles[start:stop])
+                    logger.info("start: %d, stop: %d, total: %d", start, stop, total)
+                else:
+                    is_started = False
+
         _draw_timer(graph, timer)
 
         _draw_info(graph)
