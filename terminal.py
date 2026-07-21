@@ -25,7 +25,7 @@ from pyray import (
     window_should_close,
 )
 from raylib.colors import BLACK, WHITE
-from raylib.defines import GLFW_KEY_SPACE, KEY_LEFT, KEY_RIGHT
+from raylib.defines import GLFW_KEY_J, GLFW_KEY_K, GLFW_KEY_SPACE, KEY_LEFT, KEY_RIGHT
 
 from db import repository
 from models.candle import Candle
@@ -174,6 +174,8 @@ class Graph:
         delta = timedelta(minutes=1)
         if self.interval == repository.Interval.min_15:
             delta = timedelta(minutes=15)
+        if self.interval == repository.Interval.hour_1:
+            delta = timedelta(hours=1)
         self.start = datetime.strptime(str(self.minc.begin), DATETIME_FMT) - delta
         start = self.start
         self.stop = (
@@ -212,7 +214,7 @@ class Graph:
         y = self.center.y
         i = 0
 
-        step = max(math.ceil(RATIO_Y / (self.step_y)), 3)
+        step = min(max(math.ceil(RATIO_Y / (self.step_y)), 3), 5)
 
         while y > self.axe_y.start_point.y:
             y -= self.step_y * step
@@ -270,11 +272,17 @@ class Graph:
             down = Vector2(scale.position.x, scale.position.y + 5.0)
 
             if (
-                self.interval == repository.Interval.min_1 and scale.index % 10 == 0
-            ) or (
-                self.interval == repository.Interval.min_15
-                and (scale.index % 100) == 0
-                and (scale.index // 100) % 2 == 0
+                (self.interval == repository.Interval.min_1 and scale.index % 10 == 0)
+                or (
+                    self.interval == repository.Interval.min_15
+                    and (scale.index % 100) == 0
+                    and (scale.index // 100) % 2 == 0
+                )
+                or (
+                    self.interval == repository.Interval.hour_1
+                    and (scale.index % 100) == 0
+                    and (scale.index // 100) % 6 == 0
+                )
             ):
                 up = Vector2(scale.position.x, scale.position.y - 7.5)
                 down = Vector2(scale.position.x, scale.position.y + 7.5)
@@ -315,6 +323,8 @@ class Graph:
             y_val = (datetime_val - self.start).total_seconds() / 60
         if self.interval == repository.Interval.min_15:
             y_val = ((datetime_val - self.start).total_seconds() / 60) / 15
+        if self.interval == repository.Interval.hour_1:
+            y_val = ((datetime_val - self.start).total_seconds() / 60) / 60
         return self.center.x + (y_val * STEP_X)
 
 
@@ -424,11 +434,11 @@ def _draw_info(graph: Graph):
         )
 
 
-def _draw_timer(graph: Graph, timer: float):
+def _draw_timer(graph: Graph, timer: float, mils: int):
     draw_text_ex(
         graph.font,
-        f"{timer:.2f}s",
-        Vector2(graph.bottom_right.x - GAP * 5, graph.up_left.y),
+        f"timer: {timer:.2f}s, step mils: {mils}ms",
+        Vector2(graph.bottom_right.x - GAP * 16, graph.up_left.y - GAP * 2),
         18.0,
         2.0,
         WHITE,
@@ -468,6 +478,12 @@ def run(secid: str, period: datetime, interval: repository.Interval):
 
     timer: float = 0.0
     is_started: bool = False
+    prev_mils = 0
+
+    # шаг ускорения 2 - каждые 200 миллисекунд, 5 - каждые 500 миллисекунд и т.д.
+    accelerations = [20, 50]
+    step_indx = 0
+    step_mils = accelerations[step_indx]
 
     while not window_should_close():
         begin_drawing()
@@ -482,6 +498,7 @@ def run(secid: str, period: datetime, interval: repository.Interval):
             start += 1
             stop += 1
             init(graph, candles[start:stop])
+
         if is_key_pressed(KEY_LEFT):
             start -= 1
             stop -= 1
@@ -491,19 +508,39 @@ def run(secid: str, period: datetime, interval: repository.Interval):
             is_started = not is_started
             if is_started:
                 timer = float(start)
+                step_indx = 0
+                step_mils = accelerations[step_indx]
 
-        seconds = math.floor(timer)
-        if is_started and seconds % 1 == 0:
-            if seconds > start:
-                start = seconds
-                stop += 1
-                if stop <= total:
-                    init(graph, candles[start:stop])
-                    logger.info("start: %d, stop: %d, total: %d", start, stop, total)
-                else:
-                    is_started = False
+        if is_started:
+            if is_key_pressed(GLFW_KEY_K):
+                step_indx += 1
+                if step_indx > len(accelerations) - 1:
+                    step_indx = 0
+                step_mils = accelerations[step_indx]
 
-        _draw_timer(graph, timer)
+        milliseconds, seconds = math.modf(timer)
+        # secs = int(seconds)
+        # if is_started and secs % 1 == 0 and seconds > start:
+        #     start = secs
+        #     stop += 1
+        #     if stop <= total:
+        #         init(graph, candles[start:stop])
+        #         # logger.info("start: %d, stop: %d, total: %d", start, stop, total)
+        #     else:
+        #         is_started = False
+
+        mils = int(milliseconds * 1000)
+        current_mils = mils // 10
+        if is_started and current_mils % step_mils == 0 and prev_mils != current_mils:
+            prev_mils = current_mils
+            start += 1
+            stop += 1
+            if stop <= total:
+                init(graph, candles[start:stop])
+            else:
+                is_started = False
+
+        _draw_timer(graph, timer, step_mils * 10)
 
         _draw_info(graph)
 

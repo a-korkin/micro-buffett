@@ -151,6 +151,7 @@ def add_candles(candles: list[Candle]):
 class Interval(Enum):
     min_1 = "1 minutes"
     min_15 = "15 minutes"
+    hour_1 = "1 hours"
 
 
 def get_candles(
@@ -173,9 +174,9 @@ limit {limit};""")
     else:
         sql = text(f"""
 select 
-	a."secid", avg(a."open") as "open", avg(a."close") as "close", 
-	avg(a."high") as "high", avg(a."low") as "low", 
-	avg(a."value") as "value", avg(a."volume") as "volume", 
+    a."secid", round(avg(a."open")::numeric, 2) as "open", round(avg(a."close")::numeric, 2) as "close", 
+    round(avg(a."high")::numeric, 2) as "high", round(avg(a."low")::numeric, 2) as "low", 
+    round(avg(a."value")::numeric, 2) as "value", avg(a."volume") as "volume", 
 	a."begin", a."end"
 from
 (
