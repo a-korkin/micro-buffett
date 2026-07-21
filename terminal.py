@@ -450,11 +450,9 @@ def init(graph: Graph, candle_slice: list[Candle]):
     graph.set_candles()
 
 
-def run():
-    period = datetime.strptime("2026-07-20", "%Y-%m-%d")
-    interval = repository.Interval.min_15
+def run(secid: str, period: datetime, interval: repository.Interval):
     candles = repository.get_candles(
-        secid="ozon",
+        secid=secid,
         period=period,
         interval=interval,
         limit=1000,

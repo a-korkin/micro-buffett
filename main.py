@@ -12,6 +12,7 @@ import requests
 from dotenv import load_dotenv
 
 from db.repository import (
+    Interval,
     add_candle,
     add_candles,
     add_coupons,
@@ -189,9 +190,12 @@ if __name__ == "__main__":
             secid = args[1]
             candles = parse_candles(secid)
             add_candles(candles)
+        if args[0] == "terminal":
+            period = datetime.strptime("2026-07-20", "%Y-%m-%d")
+            interval = Interval.min_1
+            sys.exit(run(secid="ozon", period=period, interval=interval))
 
     # coupons_show()
-    # sys.exit(run())
     # main()
 
     # candles_show("ozon")
