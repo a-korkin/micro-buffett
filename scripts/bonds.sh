@@ -127,7 +127,7 @@ case "$1" in
     ;;
     "candles")
         start=0
-        secid="sber"
+        secid="ozon"
         period=$(date -d"-1 days" +%F)
         iteration=1
 
@@ -135,6 +135,7 @@ case "$1" in
         while true; do
             url="${BASE_URL}/stock/markets/shares/securities/${secid}/candles.csv\
 ?from=${period}&till=${period}&interval=1&start=${start}"
+            print_status
             fn=$(printf "$period_%02d" $iteration)
             count=$(download_csv $url "candles/${secid}/" "${period}_${fn}")
             ((start += count-1))
