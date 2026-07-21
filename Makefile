@@ -1,5 +1,5 @@
 run:
-	python main.py
+	python main.py terminal
 migrate:
 	alembic revision --autogenerate -m"${NAME}"
 migrate_up:

@@ -44,6 +44,7 @@ HEIGHT = 900
 GAP = 20
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
 STEP_X = 10.0
+RATIO_Y = 9.25
 
 
 class Scale:
@@ -199,37 +200,27 @@ class Graph:
             )
             self.axe_x.scales.append(scale)
 
-        # for candle in self.candles:
-        #     title = candle.begin.strftime("%H:%M")
-        #     scale = Scale(
-        #         title=title,
-        #         position=Vector2(candle.position.x, y),
-        #         index=start.hour * 100 + start.minute,
-        #     )
-        #     self.axe_x.scales.append(scale)
-        #
-        # print("==============================")
-        # print(len(self.axe_x.scales))
-
         # y-axe
         self.axe_y = Axe(self.up_left, self.center, self.minc, self.maxc)
         self.max_y = float(math.ceil(self.axe_y.max_value))
         self.min_y = float(math.floor(self.axe_y.min_value))
 
         length = self.center.y - self.up_left.y
-        count_mark = int(self.max_y - self.min_y)
-        self.step_y = length / count_mark
+        count_marks = int(self.max_y - self.min_y)
+        self.step_y = length / count_marks
         self.axe_y.scales = []
         y = self.center.y
         i = 0
 
+        step = max(math.ceil(RATIO_Y / (self.step_y)), 3)
+
         while y > self.axe_y.start_point.y:
-            y -= self.step_y
-            i += 1
+            y -= self.step_y * step
+            i += 1 * step
             scale = Scale(
                 title=f"{float(self.min_y + i):.2f}",
                 position=Vector2(self.center.x, y),
-                index=i,
+                index=int(i),
             )
             self.axe_y.scales.append(scale)
 
