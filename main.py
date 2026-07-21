@@ -41,8 +41,8 @@ def list_files(path: str) -> list[str]:
     return [str(f) for f in Path(path).iterdir() if f.is_file()]
 
 
-def candles_show():
-    candles = get_candles("ozon")
+def candles_show(secid: str):
+    candles = get_candles(secid)
     # min_open: Candle = min(candles, key=lambda c: c.open)
     # max_open: Candle = max(candles, key=lambda c: c.open)
     # max_percent: Candle = max(candles, key=lambda c: c.percent())
@@ -169,10 +169,30 @@ def main():
         )
 
 
+def parse_candles(secid: str) -> list[Candle]:
+    dir = os.getenv("DIR") or ""
+    files = list_files(f"{dir}/candles/{secid}")
+    candles: list = []
+
+    for filename in files:
+        logger.info("parsing file: %s", filename)
+        parsed = parse_file(filename, Candle, {"secid": secid})
+        candles.extend(parsed)
+
+    return candles
+
+
 if __name__ == "__main__":
+    args = sys.argv[1:]
+    if len(args) > 0:
+        if args[0] == "candles_add":
+            secid = args[1]
+            candles = parse_candles(secid)
+            add_candles(candles)
+
     # coupons_show()
-    sys.exit(run())
+    # sys.exit(run())
     # main()
 
+    # candles_show("ozon")
     # candles = get_candles("ozon")
-    # add_candles(candles)
