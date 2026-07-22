@@ -177,7 +177,6 @@ class Graph:
 
         # x-axe
         self.axe_x = Axe(self.center, self.bottom_right, self.minc, self.maxc)
-        # TODO: проверять в каком формате интервалы (минуты, часы, дни)
         delta = timedelta(minutes=1)
         if self.interval == repository.Interval.min_15:
             delta = timedelta(minutes=15)
@@ -323,7 +322,6 @@ class Graph:
         return self.min_y - ((y - self.center.y) / self.step_y)
 
     def time_to_coord(self, value: datetime) -> float:
-        # TODO: проверять интервал (минуты, часы, дни)
         datetime_val = datetime.strptime(str(value), DATETIME_FMT)
         y_val: float = 0.0
         if self.interval == repository.Interval.min_1:
