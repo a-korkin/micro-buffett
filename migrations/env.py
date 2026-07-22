@@ -7,8 +7,8 @@ from config.settings import app_settings
 from models.base import Base
 from models.candle import Candle
 from models.coupon import Coupon
-from models.security import Security
 from models.move import Move
+from models.security import Security
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
