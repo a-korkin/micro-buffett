@@ -17,7 +17,6 @@ from pyray import (
     get_frame_time,
     get_mouse_position,
     init_window,
-    is_key_down,
     is_key_pressed,
     load_font,
     set_target_fps,
@@ -481,7 +480,7 @@ def run(secid: str, period: datetime, interval: repository.Interval):
     prev_mils = 0
 
     # шаг ускорения 2 - каждые 200 миллисекунд, 5 - каждые 500 миллисекунд и т.д.
-    accelerations = [20, 50]
+    accelerations = [50, 20, 10]
     step_indx = 0
     step_mils = accelerations[step_indx]
 
@@ -517,18 +516,13 @@ def run(secid: str, period: datetime, interval: repository.Interval):
                 if step_indx > len(accelerations) - 1:
                     step_indx = 0
                 step_mils = accelerations[step_indx]
+            if is_key_pressed(GLFW_KEY_J):
+                step_indx -= 1
+                if step_indx < 0:
+                    step_indx = len(accelerations) - 1
+                step_mils = accelerations[step_indx]
 
-        milliseconds, seconds = math.modf(timer)
-        # secs = int(seconds)
-        # if is_started and secs % 1 == 0 and seconds > start:
-        #     start = secs
-        #     stop += 1
-        #     if stop <= total:
-        #         init(graph, candles[start:stop])
-        #         # logger.info("start: %d, stop: %d, total: %d", start, stop, total)
-        #     else:
-        #         is_started = False
-
+        milliseconds, _ = math.modf(timer)
         mils = int(milliseconds * 1000)
         current_mils = mils // 10
         if is_started and current_mils % step_mils == 0 and prev_mils != current_mils:
