@@ -2,6 +2,7 @@ import logging
 import math
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import Optional
 
 from pyray import (
     Font,
@@ -21,13 +22,21 @@ from pyray import (
     get_mouse_position,
     init_window,
     is_key_pressed,
+    is_mouse_button_pressed,
     load_font,
     set_target_fps,
     unload_font,
     window_should_close,
 )
 from raylib.colors import BLACK, WHITE
-from raylib.defines import GLFW_KEY_J, GLFW_KEY_K, GLFW_KEY_SPACE, KEY_LEFT, KEY_RIGHT
+from raylib.defines import (
+    GLFW_KEY_J,
+    GLFW_KEY_K,
+    GLFW_KEY_SPACE,
+    KEY_LEFT,
+    KEY_RIGHT,
+    MOUSE_LEFT_BUTTON,
+)
 
 from db import repository
 from models.candle import Candle
@@ -396,9 +405,14 @@ def _candle_info(graph: Graph, candle: Candle, position: Vector2):
         msg += v
 
 
-def _draw_info(graph: Graph):
+def _click(graph: Graph, candle: Candle):
+    print("=================================================")
+    print(candle)
+    print("+++++++++++++++++++++++++++++++++++++++++++++++++")
+
+
+def _get_current_candle(graph: Graph) -> Optional[Candle]:
     mouse_pos = get_mouse_position()
-    position = Vector2(graph.up_left.x + GAP, GAP)
     if not (
         mouse_pos.x >= graph.up_left.x
         and mouse_pos.x <= graph.bottom_right.x
@@ -414,29 +428,52 @@ def _draw_info(graph: Graph):
         ):
             continue
 
-        _candle_info(graph, candle, position)
+        return candle
 
-        # draw dashed pointer
-        up = Vector2(candle.position.x + candle.size.x / 2.0, graph.up_left.y)
-        down = Vector2(candle.position.x + candle.size.x / 2.0, graph.bottom_right.y)
-        left = Vector2(graph.up_left.x, mouse_pos.y)
-        right = Vector2(graph.bottom_right.x, mouse_pos.y)
-        draw_line_dashed(up, down, 6, 3, WHITE)
-        draw_line_dashed(left, right, 6, 3, WHITE)
+    return None
 
-        # draw candle info
-        # TODO: check interval minutes, hours, days
-        msg = (
-            f"[{candle.begin.strftime('%H:%M')}] {graph.coord_to_sum(mouse_pos.y):.2f}"
-        )
-        draw_text_ex(
-            graph.font,
-            msg,
-            Vector2(mouse_pos.x + GAP / 2.0, mouse_pos.y - GAP),
-            16.0,
-            2.0,
-            WHITE,
-        )
+
+def _draw_info(graph: Graph, mouse_position: Vector2, candle: Candle):
+    # mouse_pos = get_mouse_position()
+    position = Vector2(graph.up_left.x + GAP, GAP)
+    # if not (
+    #     mouse_pos.x >= graph.up_left.x
+    #     and mouse_pos.x <= graph.bottom_right.x
+    #     and mouse_pos.y >= graph.up_left.y
+    #     and mouse_pos.y <= graph.bottom_right.y
+    # ):
+    #     return
+    #
+    # for candle in graph.candles:
+    #     if not (
+    #         mouse_pos.x >= candle.position.x
+    #         and mouse_pos.x <= candle.position.x + candle.size.x
+    #     ):
+    #         continue
+
+    _candle_info(graph, candle, position)
+
+    # draw dashed pointer
+    up = Vector2(candle.position.x + candle.size.x / 2.0, graph.up_left.y)
+    down = Vector2(candle.position.x + candle.size.x / 2.0, graph.bottom_right.y)
+    left = Vector2(graph.up_left.x, mouse_position.y)
+    right = Vector2(graph.bottom_right.x, mouse_position.y)
+    draw_line_dashed(up, down, 6, 3, WHITE)
+    draw_line_dashed(left, right, 6, 3, WHITE)
+
+    # draw candle info
+    # TODO: check interval minutes, hours, days
+    msg = (
+        f"[{candle.begin.strftime('%H:%M')}] {graph.coord_to_sum(mouse_position.y):.2f}"
+    )
+    draw_text_ex(
+        graph.font,
+        msg,
+        Vector2(mouse_position.x + GAP / 2.0, mouse_position.y - GAP),
+        16.0,
+        2.0,
+        WHITE,
+    )
 
 
 def _draw_timer(graph: Graph, timer: float, mils: int):
@@ -532,6 +569,8 @@ def run(secid: str, period: datetime, interval: repository.Interval):
     step_indx = 0
     step_mils = accelerations[step_indx]
 
+    current_candle: Optional[Candle] = None
+
     while not window_should_close():
         begin_drawing()
         clear_background(BACKGROUND_COLOR)
@@ -584,7 +623,13 @@ def run(secid: str, period: datetime, interval: repository.Interval):
 
         _draw_timer(graph, timer, step_mils * 10)
 
-        _draw_info(graph)
+        current_candle = _get_current_candle(graph)
+        if current_candle:
+            mouse_position = get_mouse_position()
+            _draw_info(graph, mouse_position, current_candle)
+
+            if is_mouse_button_pressed(MOUSE_LEFT_BUTTON):
+                _click(graph, current_candle)
 
         _draw_pointer(graph, graph.candles[13], PointerType.buy)
         _draw_pointer(graph, graph.candles[3], PointerType.sell)
