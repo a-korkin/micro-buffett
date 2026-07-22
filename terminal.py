@@ -457,20 +457,20 @@ def _draw_pointer(graph: Graph, candle: Candle, pointer_type: PointerType):
     x = candle.position.x + STEP_X / 2.0
     y = (
         graph.sum_to_coord(candle.high) - 2.0
-        if pointer_type == PointerType.buy
+        if pointer_type == PointerType.sell
         else graph.sum_to_coord(candle.low) + 2.0
     )
 
     a = Vector2(x, y)
     b = Vector2(
         x + size,
-        y - size * 1.5 if pointer_type == PointerType.buy else y + size * 1.5,
+        y - size * 1.5 if pointer_type == PointerType.sell else y + size * 1.5,
     )
     c = Vector2(
         x - size,
-        y - size * 1.5 if pointer_type == PointerType.buy else y + size * 1.5,
+        y - size * 1.5 if pointer_type == PointerType.sell else y + size * 1.5,
     )
-    if pointer_type == PointerType.buy:
+    if pointer_type == PointerType.sell:
         draw_triangle(a, b, c, GREEN)
     else:
         draw_triangle(c, b, a, RED)
@@ -479,14 +479,14 @@ def _draw_pointer(graph: Graph, candle: Candle, pointer_type: PointerType):
         a,
         b,
         c,
-        GREEN if pointer_type == PointerType.buy else RED,
+        GREEN if pointer_type == PointerType.sell else RED,
     )
     draw_text_ex(
         graph.font,
         pointer_type.value,
         Vector2(
-            x - 13.0 if pointer_type == PointerType.buy else x - 17.0,
-            y - 36.0 if pointer_type == PointerType.buy else y + 24.0,
+            x - 18.0 if pointer_type == PointerType.sell else x - 13.0,
+            y - 40.0 if pointer_type == PointerType.sell else y + 24.0,
         ),
         16.0,
         2.0,
@@ -588,8 +588,8 @@ def run(secid: str, period: datetime, interval: repository.Interval):
 
         _draw_info(graph)
 
-        _draw_pointer(graph, graph.candles[3], PointerType.buy)
-        _draw_pointer(graph, graph.candles[13], PointerType.sell)
+        _draw_pointer(graph, graph.candles[13], PointerType.buy)
+        _draw_pointer(graph, graph.candles[3], PointerType.sell)
 
         end_drawing()
     unload_font(graph.font)
