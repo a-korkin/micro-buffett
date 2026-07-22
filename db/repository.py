@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from models.candle import Candle
 from models.coupon import Coupon
+from models.move import Move
 from models.security import BestSecurity, Security
 
 from .engine import engine
@@ -132,17 +133,6 @@ def add_candles(candles: list[Candle]):
 
     if len(data) > 0:
         stmt = insert(Candle).values(data)
-        # stmt = stmt.on_conflict_do_update(
-        #     index_elements=["secid", "begin", "end"],
-        #     set_=dict(
-        #         open=stmt.excluded.open,
-        #         close=stmt.excluded.close,
-        #         high=stmt.excluded.high,
-        #         low=stmt.excluded.low,
-        #         volume=stmt.excluded.volume,
-        #     ),
-        # )
-
         with engine.connect() as connection:
             connection.execute(stmt)
             connection.commit()
@@ -164,7 +154,7 @@ def get_candles(
     if interval == Interval.min_1:
         sql = text(f"""
 select 
-    "secid", "open", "close", "high", "low", "value", "volume", "begin", "end"
+    "id", "secid", "open", "close", "high", "low", "value", "volume", "begin", "end"
 from public.candles
 where "secid" = '{secid}'
     and "begin"::date = '{period}'::date
@@ -174,20 +164,20 @@ limit {limit};""")
     else:
         sql = text(f"""
 select 
-    a."secid", round(avg(a."open")::numeric, 2) as "open", round(avg(a."close")::numeric, 2) as "close", 
+    a."id", a."secid", round(avg(a."open")::numeric, 2) as "open", round(avg(a."close")::numeric, 2) as "close", 
     round(avg(a."high")::numeric, 2) as "high", round(avg(a."low")::numeric, 2) as "low", 
     round(avg(a."value")::numeric, 2) as "value", avg(a."volume") as "volume", 
 	a."begin", a."end"
 from
 (
 	select 
-		"secid", "open", "close", "high", "low", "value", "volume", 
+		"id", "secid", "open", "close", "high", "low", "value", "volume", 
 		date_bin('{interval.value}', "begin", "begin"::date) as "begin",
 		date_bin('{interval.value}', "begin", "begin"::date) + '{interval.value} - 1 seconds'::interval as "end"
 	from public.candles
 	where "secid" = '{secid}'
 ) as a
-group by a."secid", a."begin", a."end"
+group by a."id", a."secid", a."begin", a."end"
 order by a."begin"
 offset {offset}
 limit {limit};""")
@@ -197,3 +187,16 @@ limit {limit};""")
             Candle(row._mapping)
             for row in cast("list[Candle]", connection.execute(sql).all())
         ]
+
+
+def add_move(move: Move) -> Move:
+    item = move.__dict__.copy()
+    item.pop("_sa_instance_state", None)
+
+    stmt = insert(Move).values(item).returning(Move)
+    with engine.connect() as connection:
+        res = connection.execute(stmt).first()
+        connection.commit()
+        print("=========================================")
+        print(res)
+        return cast("Move", item)

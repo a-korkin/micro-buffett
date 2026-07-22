@@ -16,3 +16,15 @@ class Move(Base):
     previous_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("moves.id"))
     current: Mapped[float] = mapped_column(Float())
     total: Mapped[float] = mapped_column(Float())
+
+    def __init__(
+        self,
+        candle_id: UUID,
+        previous_id: Optional[UUID],
+        current: float,
+        total: float,
+    ):
+        self.candle_id = candle_id
+        self.previous_id = previous_id
+        self.current = current
+        self.total = total

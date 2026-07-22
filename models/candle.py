@@ -34,6 +34,7 @@ class Candle(Base):
     size: Vector2 = Vector2(0.0, 0.0)
 
     def __init__(self, obj: dict):
+        self.id = obj["id"]
         self.secid = obj["secid"]
         self.open = obj["open"]
         self.close = obj["close"]

@@ -40,6 +40,7 @@ from raylib.defines import (
 
 from db import repository
 from models.candle import Candle
+from models.move import Move
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -405,12 +406,6 @@ def _candle_info(graph: Graph, candle: Candle, position: Vector2):
         msg += v
 
 
-def _click(graph: Graph, candle: Candle):
-    print("=================================================")
-    print(candle)
-    print("+++++++++++++++++++++++++++++++++++++++++++++++++")
-
-
 def _get_current_candle(graph: Graph) -> Optional[Candle]:
     mouse_pos = get_mouse_position()
     if not (
@@ -434,23 +429,7 @@ def _get_current_candle(graph: Graph) -> Optional[Candle]:
 
 
 def _draw_info(graph: Graph, mouse_position: Vector2, candle: Candle):
-    # mouse_pos = get_mouse_position()
     position = Vector2(graph.up_left.x + GAP, GAP)
-    # if not (
-    #     mouse_pos.x >= graph.up_left.x
-    #     and mouse_pos.x <= graph.bottom_right.x
-    #     and mouse_pos.y >= graph.up_left.y
-    #     and mouse_pos.y <= graph.bottom_right.y
-    # ):
-    #     return
-    #
-    # for candle in graph.candles:
-    #     if not (
-    #         mouse_pos.x >= candle.position.x
-    #         and mouse_pos.x <= candle.position.x + candle.size.x
-    #     ):
-    #         continue
-
     _candle_info(graph, candle, position)
 
     # draw dashed pointer
@@ -474,6 +453,12 @@ def _draw_info(graph: Graph, mouse_position: Vector2, candle: Candle):
         2.0,
         WHITE,
     )
+
+
+def _click(graph: Graph, candle: Candle):
+    move = Move(candle_id=candle.id, previous_id=None, current=10.0, total=20.0)
+    res = repository.add_move(move)
+    # print(res)
 
 
 def _draw_timer(graph: Graph, timer: float, mils: int):
