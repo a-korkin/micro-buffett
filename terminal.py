@@ -1,6 +1,7 @@
 import logging
 import math
 from datetime import datetime, timedelta
+from enum import Enum
 
 from pyray import (
     Font,
@@ -13,6 +14,8 @@ from pyray import (
     draw_rectangle_lines_ex,
     draw_rectangle_rec,
     draw_text_ex,
+    draw_triangle,
+    draw_triangle_lines,
     end_drawing,
     get_frame_time,
     get_mouse_position,
@@ -44,6 +47,11 @@ GAP = 20
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
 STEP_X = 10.0
 RATIO_Y = 9.25
+
+
+class PointerType(Enum):
+    buy = "BUY"
+    sell = "SELL"
 
 
 class Scale:
@@ -444,6 +452,47 @@ def _draw_timer(graph: Graph, timer: float, mils: int):
     )
 
 
+def _draw_pointer(graph: Graph, candle: Candle, pointer_type: PointerType):
+    size = 32.0
+    x = candle.position.x + STEP_X / 2.0
+    y = (
+        graph.sum_to_coord(candle.high) - 2.0
+        if pointer_type == PointerType.buy
+        else graph.sum_to_coord(candle.low) + 2.0
+    )
+
+    a = Vector2(x, y)
+    b = Vector2(
+        x + size, y - size * 1.5 if pointer_type == PointerType.buy else y + size * 1.5
+    )
+    c = Vector2(
+        x - size, y - size * 1.5 if pointer_type == PointerType.buy else y + size * 1.5
+    )
+    draw_triangle(
+        a,
+        b,
+        c,
+        GREEN if pointer_type == PointerType.buy else RED,
+    )
+    draw_text_ex(
+        graph.font,
+        pointer_type.value,
+        Vector2(
+            x - 13.0 if pointer_type == PointerType.buy else x - 17.0,
+            y - 36.0 if pointer_type == PointerType.buy else y + 24.0,
+        ),
+        16.0,
+        2.0,
+        WHITE,
+    )
+    draw_triangle_lines(
+        a,
+        b,
+        c,
+        GREEN if pointer_type == PointerType.buy else RED,
+    )
+
+
 def init(graph: Graph, candle_slice: list[Candle]):
     graph.candles = candle_slice
     graph.candle_edges()
@@ -479,8 +528,8 @@ def run(secid: str, period: datetime, interval: repository.Interval):
     is_started: bool = False
     prev_mils = 0
 
-    # шаг ускорения 2 - каждые 200 миллисекунд, 5 - каждые 500 миллисекунд и т.д.
-    accelerations = [50, 20, 10]
+    # шаг ускорения 20 - каждые 200 миллисекунд, 50 - каждые 500 миллисекунд и т.д.
+    accelerations = [50, 20, 10, 5]
     step_indx = 0
     step_mils = accelerations[step_indx]
 
@@ -537,6 +586,9 @@ def run(secid: str, period: datetime, interval: repository.Interval):
         _draw_timer(graph, timer, step_mils * 10)
 
         _draw_info(graph)
+
+        _draw_pointer(graph, graph.candles[3], PointerType.buy)
+        _draw_pointer(graph, graph.candles[13], PointerType.sell)
 
         end_drawing()
     unload_font(graph.font)
