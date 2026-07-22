@@ -463,12 +463,19 @@ def _draw_pointer(graph: Graph, candle: Candle, pointer_type: PointerType):
 
     a = Vector2(x, y)
     b = Vector2(
-        x + size, y - size * 1.5 if pointer_type == PointerType.buy else y + size * 1.5
+        x + size,
+        y - size * 1.5 if pointer_type == PointerType.buy else y + size * 1.5,
     )
     c = Vector2(
-        x - size, y - size * 1.5 if pointer_type == PointerType.buy else y + size * 1.5
+        x - size,
+        y - size * 1.5 if pointer_type == PointerType.buy else y + size * 1.5,
     )
-    draw_triangle(
+    if pointer_type == PointerType.buy:
+        draw_triangle(a, b, c, GREEN)
+    else:
+        draw_triangle(c, b, a, RED)
+
+    draw_triangle_lines(
         a,
         b,
         c,
@@ -484,12 +491,6 @@ def _draw_pointer(graph: Graph, candle: Candle, pointer_type: PointerType):
         16.0,
         2.0,
         WHITE,
-    )
-    draw_triangle_lines(
-        a,
-        b,
-        c,
-        GREEN if pointer_type == PointerType.buy else RED,
     )
 
 
