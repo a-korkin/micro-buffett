@@ -132,16 +132,16 @@ def add_candles(candles: list[Candle]):
 
     if len(data) > 0:
         stmt = insert(Candle).values(data)
-        stmt = stmt.on_conflict_do_update(
-            index_elements=["secid", "begin", "end"],
-            set_=dict(
-                open=stmt.excluded.open,
-                close=stmt.excluded.close,
-                high=stmt.excluded.high,
-                low=stmt.excluded.low,
-                volume=stmt.excluded.volume,
-            ),
-        )
+        # stmt = stmt.on_conflict_do_update(
+        #     index_elements=["secid", "begin", "end"],
+        #     set_=dict(
+        #         open=stmt.excluded.open,
+        #         close=stmt.excluded.close,
+        #         high=stmt.excluded.high,
+        #         low=stmt.excluded.low,
+        #         volume=stmt.excluded.volume,
+        #     ),
+        # )
 
         with engine.connect() as connection:
             connection.execute(stmt)

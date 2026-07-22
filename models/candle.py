@@ -1,7 +1,7 @@
+import uuid
 from datetime import datetime
-from typing import Optional
 
-from sqlalchemy import BigInteger, DateTime, Float, String
+from sqlalchemy import UUID, BigInteger, DateTime, Float, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
@@ -18,15 +18,18 @@ class Vector2:
 
 class Candle(Base):
     __tablename__ = "candles"
-    secid: Mapped[str] = mapped_column(String(256), primary_key=True)
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    secid: Mapped[str] = mapped_column(String(256))
     open: Mapped[float] = mapped_column(Float())
     close: Mapped[float] = mapped_column(Float())
     high: Mapped[float] = mapped_column(Float())
     low: Mapped[float] = mapped_column(Float())
     value: Mapped[float] = mapped_column(Float())
     volume: Mapped[int] = mapped_column(BigInteger())
-    begin: Mapped[datetime] = mapped_column(DateTime(), primary_key=True)
-    end: Mapped[datetime] = mapped_column(DateTime(), primary_key=True)
+    begin: Mapped[datetime] = mapped_column(DateTime())
+    end: Mapped[datetime] = mapped_column(DateTime())
     position: Vector2 = Vector2(0.0, 0.0)
     size: Vector2 = Vector2(0.0, 0.0)
 
