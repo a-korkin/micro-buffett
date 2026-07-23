@@ -62,7 +62,11 @@ class Candle(Base):
         )
 
     def average(self) -> float:
-        return round((float(self.open) + float(self.close)) / 2.0, 2)
+        return round(
+            (float(self.open) + float(self.close) + float(self.high) + float(self.low))
+            / 4.0,
+            2,
+        )
 
     def info(self) -> str:
         prefix = ""

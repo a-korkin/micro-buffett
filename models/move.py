@@ -2,7 +2,7 @@ import enum
 import uuid
 from typing import Optional
 
-from sqlalchemy import UUID, Enum, Float, ForeignKey
+from sqlalchemy import UUID, Enum, Float, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
@@ -20,8 +20,10 @@ class Move(Base):
     )
     candle_id: Mapped[UUID] = mapped_column(ForeignKey("candles.id"))
     previous_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("moves.id"))
-    current: Mapped[float] = mapped_column(Float())
-    total: Mapped[float] = mapped_column(Float())
+    summ: Mapped[float] = mapped_column(Float())
+    remain: Mapped[float] = mapped_column(Float())
+    count: Mapped[int] = mapped_column(Integer())
+    price: Mapped[float] = mapped_column(Float())
     operation: Mapped[Operation] = mapped_column(Enum(Operation, name="operations"))
     sprint_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
 
@@ -29,14 +31,18 @@ class Move(Base):
         self,
         candle_id: UUID,
         previous_id: Optional[UUID],
-        current: float,
-        total: float,
+        summ: float,
+        remain: float,
+        count: int,
+        price: float,
         operation: Operation,
         sprint_id: uuid.UUID,
     ):
         self.candle_id = candle_id
         self.previous_id = previous_id
-        self.current = current
-        self.total = total
+        self.summ = summ
+        self.remain = remain
+        self.count = count
+        self.price = price
         self.operation = operation
         self.sprint_id = sprint_id

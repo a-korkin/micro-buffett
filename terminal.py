@@ -59,6 +59,7 @@ GAP = 20
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
 STEP_X = 10.0
 RATIO_Y = 9.25
+COMMISSION = 0.0005
 
 
 class Mode(Enum):
@@ -141,12 +142,14 @@ class Graph:
     font: Font
 
     mode: Mode
+    balance: float
 
     def __init__(
         self,
         up_left: Vector2,
         bottom_right: Vector2,
         interval: repository.Interval,
+        balance: float,
     ):
         self.up_left = up_left
         self.bottom_right = bottom_right
@@ -158,6 +161,7 @@ class Graph:
         self.max_y = 0.0
         self.min_y = 0.0
         self.mode = Mode.OFF
+        self.balance = balance
 
     def candle_edges(self):
         init = self.candles[0]
@@ -470,13 +474,23 @@ def _draw_info(graph: Graph, mouse_position: Vector2, candle: Candle):
             WHITE,
         )
 
-    # draw mode info
+    # draw mode
     position.y = GAP * 2
     msg = f"mode: {graph.mode.name}"
     draw_text_ex(graph.font, msg, position, 16.0, 2.0, WHITE)
 
+    # draw balance
+    position.y = GAP * 3
+    msg = f"balance: {graph.balance:.2f}"
+    draw_text_ex(graph.font, msg, position, 16.0, 2.0, WHITE)
 
-def _make_move(candle: Candle, last_move: Optional[Move], sprint_id: UUID) -> Move:
+
+def _make_move(
+    candle: Candle,
+    last_move: Optional[Move],
+    sprint_id: UUID,
+    balance: float,
+) -> Move:
     previous_id = None
     operation = Operation.BUY
 
@@ -487,16 +501,34 @@ def _make_move(candle: Candle, last_move: Optional[Move], sprint_id: UUID) -> Mo
         else:
             operation = Operation.BUY
 
+    average = candle.average()
+    price = round(average + average * COMMISSION, 2)
+    count = 0
+    summ = 0.0
+    remain = 0.0
+
+    if operation == Operation.BUY:
+        count = math.floor(balance / price)
+        summ = price * count
+        remain = balance - summ
+    else:
+        if last_move:
+            count = last_move.count
+            summ = price * count
+            remain = balance + summ
+
     move = Move(
         candle_id=candle.id,
         previous_id=previous_id,
-        current=10.0,
-        total=20.0,
+        summ=summ,
+        remain=remain,
+        count=count,
+        price=price,
         operation=operation,
         sprint_id=sprint_id,
     )
-    result = repository.add_move(move)
-    return result
+
+    return repository.add_move(move)
 
 
 def _draw_timer(graph: Graph, timer: float, mils: int):
@@ -571,6 +603,7 @@ def run(secid: str, period: datetime, interval: repository.Interval):
         up_left=Vector2(GAP * 5, GAP * 10),
         bottom_right=Vector2(WIDTH - GAP, HEIGHT - GAP * 4),
         interval=interval,
+        balance=100_000.0,
     )
     start = 0
     stop = int((graph.bottom_right.x - graph.center.x) / STEP_X)
@@ -592,10 +625,11 @@ def run(secid: str, period: datetime, interval: repository.Interval):
     step_indx = 0
     step_mils = accelerations[step_indx]
 
+    # начальные данные для запуска стратегии
     current_candle: Optional[Candle] = None
     last_move: Optional[Move] = None
     moves: list[tuple[Move, Candle]] = []
-    sprint_id = uuid4()
+    sprint_id: UUID = uuid4()
 
     while not window_should_close():
         begin_drawing()
@@ -661,8 +695,9 @@ def run(secid: str, period: datetime, interval: repository.Interval):
             and is_mouse_button_pressed(MOUSE_LEFT_BUTTON)
             and graph.mode == Mode.MOVE_PICKER
         ):
-            last_move = _make_move(current_candle, last_move, sprint_id)
+            last_move = _make_move(current_candle, last_move, sprint_id, graph.balance)
             moves.append((last_move, current_candle))
+            graph.balance = last_move.remain
 
         # draw moves:
         for move, candle in moves:
