@@ -188,6 +188,9 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if len(args) > 0:
         if args[0] == "candles_add":
+            if len(args) < 2:
+                logger.error("'SECID' not presented")
+                sys.exit(1)
             secid = args[1]
             candles = parse_candles(secid)
             add_candles(candles)
