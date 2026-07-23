@@ -40,6 +40,7 @@ from raylib.defines import (
     MOUSE_LEFT_BUTTON,
 )
 
+from algo import make_move
 from db import repository
 from models.candle import Candle
 from models.move import Move, Operation
@@ -59,7 +60,6 @@ GAP = 20
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
 STEP_X = 10.0
 RATIO_Y = 9.25
-COMMISSION = 0.0005
 
 
 class Mode(Enum):
@@ -485,52 +485,6 @@ def _draw_info(graph: Graph, mouse_position: Vector2, candle: Candle):
     draw_text_ex(graph.font, msg, position, 16.0, 2.0, WHITE)
 
 
-def _make_move(
-    candle: Candle,
-    last_move: Optional[Move],
-    sprint_id: UUID,
-    balance: float,
-) -> Move:
-    previous_id = None
-    operation = Operation.BUY
-
-    if last_move:
-        previous_id = last_move.id
-        if last_move.operation == Operation.BUY:
-            operation = Operation.SELL
-        else:
-            operation = Operation.BUY
-
-    average = candle.average()
-    price = round(average + average * COMMISSION, 2)
-    count = 0
-    summ = 0.0
-    remain = 0.0
-
-    if operation == Operation.BUY:
-        count = math.floor(balance / price)
-        summ = price * count
-        remain = balance - summ
-    else:
-        if last_move:
-            count = last_move.count
-            summ = price * count
-            remain = balance + summ
-
-    move = Move(
-        candle_id=candle.id,
-        previous_id=previous_id,
-        summ=summ,
-        remain=remain,
-        count=count,
-        price=price,
-        operation=operation,
-        sprint_id=sprint_id,
-    )
-
-    return repository.add_move(move)
-
-
 def _draw_timer(graph: Graph, timer: float, mils: int):
     draw_text_ex(
         graph.font,
@@ -695,7 +649,7 @@ def run(secid: str, period: datetime, interval: repository.Interval):
             and is_mouse_button_pressed(MOUSE_LEFT_BUTTON)
             and graph.mode == Mode.MOVE_PICKER
         ):
-            last_move = _make_move(current_candle, last_move, sprint_id, graph.balance)
+            last_move = make_move(current_candle, last_move, sprint_id, graph.balance)
             moves.append((last_move, current_candle))
             graph.balance = last_move.remain
 
