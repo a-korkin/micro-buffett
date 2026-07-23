@@ -7,6 +7,7 @@ from datetime import datetime
 from http import HTTPStatus
 from pathlib import Path
 from typing import Optional
+from uuid import UUID, uuid4
 
 import requests
 from dotenv import load_dotenv

@@ -19,7 +19,9 @@ class Vector2:
 class Candle(Base):
     __tablename__ = "candles"
     id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
     )
     secid: Mapped[str] = mapped_column(String(256))
     open: Mapped[float] = mapped_column(Float())
@@ -34,7 +36,7 @@ class Candle(Base):
     size: Vector2 = Vector2(0.0, 0.0)
 
     def __init__(self, obj: dict):
-        self.id = obj["id"]
+        self.id = obj.get("id", uuid.uuid4())
         self.secid = obj["secid"]
         self.open = obj["open"]
         self.close = obj["close"]
