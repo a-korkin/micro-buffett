@@ -480,9 +480,6 @@ def _make_move(graph: Graph, candle: Candle, last_move: Optional[Move]) -> Move:
     operation = Operation.BUY
 
     if last_move:
-        print("------------------------------------------------------")
-        print(last_move)
-        print("------------------------------------------------------")
         previous_id = last_move.id
         if last_move.operation == Operation.BUY:
             operation = Operation.SELL
@@ -596,6 +593,8 @@ def run(secid: str, period: datetime, interval: repository.Interval):
     current_candle: Optional[Candle] = None
     last_move: Optional[Move] = None
 
+    moves: list[tuple[Move, Candle]] = []
+
     while not window_should_close():
         begin_drawing()
         clear_background(BACKGROUND_COLOR)
@@ -661,9 +660,11 @@ def run(secid: str, period: datetime, interval: repository.Interval):
             and graph.mode == Mode.MOVE_PICKER
         ):
             last_move = _make_move(graph, current_candle, last_move)
+            moves.append((last_move, current_candle))
 
-        _draw_pointer(graph, graph.candles[13], Operation.BUY)
-        _draw_pointer(graph, graph.candles[3], Operation.SELL)
+        # draw moves:
+        for move, candle in moves:
+            _draw_pointer(graph, candle, move.operation)
 
         end_drawing()
     unload_font(graph.font)

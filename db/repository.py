@@ -4,6 +4,7 @@ from typing import cast
 
 from sqlalchemy import and_, func, select, text
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import selectinload
 
 from models.candle import Candle
 from models.coupon import Coupon
