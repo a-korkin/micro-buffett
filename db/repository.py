@@ -197,6 +197,4 @@ def add_move(move: Move) -> Move:
     with engine.connect() as connection:
         res = connection.execute(stmt).first()
         connection.commit()
-        print("=========================================")
-        print(res)
-        return cast("Move", item)
+        return cast("Move", res)

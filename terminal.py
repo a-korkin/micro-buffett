@@ -32,6 +32,7 @@ from raylib.colors import BLACK, WHITE
 from raylib.defines import (
     GLFW_KEY_J,
     GLFW_KEY_K,
+    GLFW_KEY_M,
     GLFW_KEY_SPACE,
     KEY_LEFT,
     KEY_RIGHT,
@@ -40,7 +41,7 @@ from raylib.defines import (
 
 from db import repository
 from models.candle import Candle
-from models.move import Move
+from models.move import Move, Operation
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -59,9 +60,19 @@ STEP_X = 10.0
 RATIO_Y = 9.25
 
 
-class PointerType(Enum):
-    buy = "BUY"
-    sell = "SELL"
+class Mode(Enum):
+    OFF = 1
+    MOVE_PICKER = 2
+
+    def next(self):
+        cls = self.__class__
+        members = list(cls)
+        index = members.index(self) + 1
+
+        if index >= len(members):
+            return members[0]
+
+        return members[index]
 
 
 class Scale:
@@ -128,6 +139,8 @@ class Graph:
 
     font: Font
 
+    mode: Mode
+
     def __init__(
         self,
         up_left: Vector2,
@@ -143,6 +156,7 @@ class Graph:
         self.step_y = 0.0
         self.max_y = 0.0
         self.min_y = 0.0
+        self.mode = Mode.OFF
 
     def candle_edges(self):
         init = self.candles[0]
@@ -372,15 +386,17 @@ def _draw_candles(graph: Graph):
         _draw_candle(graph, candle)
 
 
-def _candle_info(graph: Graph, candle: Candle, position: Vector2):
-    color = GREEN if candle.open <= candle.close else RED
+def _candle_info(graph: Graph, candle: Optional[Candle], position: Vector2):
+    color = WHITE
+    if candle:
+        color = GREEN if candle.open <= candle.close else RED
 
     info = {
-        "open: ": f"{candle.open} ",
-        "close: ": f"{candle.close} ",
-        "high: ": f"{candle.high} ",
-        "low: ": f"{candle.low} ",
-        "percent: ": f"{candle.percent()}%",
+        "open: ": f"{candle.open if candle else 0.0} ",
+        "close: ": f"{candle.close if candle else 0.0} ",
+        "high: ": f"{candle.high if candle else 0.0} ",
+        "low: ": f"{candle.low if candle else 0.0} ",
+        "percent: ": f"{candle.percent() if candle else 0.0}%",
     }
 
     msg: str = ""
@@ -433,32 +449,55 @@ def _draw_info(graph: Graph, mouse_position: Vector2, candle: Candle):
     _candle_info(graph, candle, position)
 
     # draw dashed pointer
-    up = Vector2(candle.position.x + candle.size.x / 2.0, graph.up_left.y)
-    down = Vector2(candle.position.x + candle.size.x / 2.0, graph.bottom_right.y)
-    left = Vector2(graph.up_left.x, mouse_position.y)
-    right = Vector2(graph.bottom_right.x, mouse_position.y)
-    draw_line_dashed(up, down, 6, 3, WHITE)
-    draw_line_dashed(left, right, 6, 3, WHITE)
+    if candle:
+        up = Vector2(candle.position.x + candle.size.x / 2.0, graph.up_left.y)
+        down = Vector2(candle.position.x + candle.size.x / 2.0, graph.bottom_right.y)
+        left = Vector2(graph.up_left.x, mouse_position.y)
+        right = Vector2(graph.bottom_right.x, mouse_position.y)
+        draw_line_dashed(up, down, 6, 3, WHITE)
+        draw_line_dashed(left, right, 6, 3, WHITE)
 
-    # draw candle info
-    # TODO: check interval minutes, hours, days
-    msg = (
-        f"[{candle.begin.strftime('%H:%M')}] {graph.coord_to_sum(mouse_position.y):.2f}"
+        # draw candle info
+        # TODO: check interval minutes, hours, days
+        msg = f"[{candle.begin.strftime('%H:%M')}] {graph.coord_to_sum(mouse_position.y):.2f}"
+        draw_text_ex(
+            graph.font,
+            msg,
+            Vector2(mouse_position.x + GAP / 2.0, mouse_position.y - GAP),
+            16.0,
+            2.0,
+            WHITE,
+        )
+
+    # draw mode info
+    position.y = GAP * 2
+    msg = f"mode: {graph.mode.name}"
+    draw_text_ex(graph.font, msg, position, 16.0, 2.0, WHITE)
+
+
+def _make_move(graph: Graph, candle: Candle, last_move: Optional[Move]) -> Move:
+    previous_id = None
+    operation = Operation.BUY
+
+    if last_move:
+        print("------------------------------------------------------")
+        print(last_move)
+        print("------------------------------------------------------")
+        previous_id = last_move.id
+        if last_move.operation == Operation.BUY:
+            operation = Operation.SELL
+        else:
+            operation = Operation.BUY
+
+    move = Move(
+        candle_id=candle.id,
+        previous_id=previous_id,
+        current=10.0,
+        total=20.0,
+        operation=operation,
     )
-    draw_text_ex(
-        graph.font,
-        msg,
-        Vector2(mouse_position.x + GAP / 2.0, mouse_position.y - GAP),
-        16.0,
-        2.0,
-        WHITE,
-    )
-
-
-def _click(graph: Graph, candle: Candle):
-    move = Move(candle_id=candle.id, previous_id=None, current=10.0, total=20.0)
-    res = repository.add_move(move)
-    # print(res)
+    result = repository.add_move(move)
+    return result
 
 
 def _draw_timer(graph: Graph, timer: float, mils: int):
@@ -472,25 +511,25 @@ def _draw_timer(graph: Graph, timer: float, mils: int):
     )
 
 
-def _draw_pointer(graph: Graph, candle: Candle, pointer_type: PointerType):
+def _draw_pointer(graph: Graph, candle: Candle, pointer_type: Operation):
     size = 32.0
     x = candle.position.x + STEP_X / 2.0
     y = (
         graph.sum_to_coord(candle.high) - 2.0
-        if pointer_type == PointerType.sell
+        if pointer_type == Operation.SELL
         else graph.sum_to_coord(candle.low) + 2.0
     )
 
     a = Vector2(x, y)
     b = Vector2(
         x + size,
-        y - size * 1.5 if pointer_type == PointerType.sell else y + size * 1.5,
+        y - size * 1.5 if pointer_type == Operation.SELL else y + size * 1.5,
     )
     c = Vector2(
         x - size,
-        y - size * 1.5 if pointer_type == PointerType.sell else y + size * 1.5,
+        y - size * 1.5 if pointer_type == Operation.SELL else y + size * 1.5,
     )
-    if pointer_type == PointerType.sell:
+    if pointer_type == Operation.SELL:
         draw_triangle(a, b, c, GREEN)
     else:
         draw_triangle(c, b, a, RED)
@@ -499,14 +538,14 @@ def _draw_pointer(graph: Graph, candle: Candle, pointer_type: PointerType):
         a,
         b,
         c,
-        GREEN if pointer_type == PointerType.sell else RED,
+        GREEN if pointer_type == Operation.SELL else RED,
     )
     draw_text_ex(
         graph.font,
-        pointer_type.value,
+        pointer_type.value.upper(),
         Vector2(
-            x - 18.0 if pointer_type == PointerType.sell else x - 13.0,
-            y - 40.0 if pointer_type == PointerType.sell else y + 24.0,
+            x - 18.0 if pointer_type == Operation.SELL else x - 13.0,
+            y - 40.0 if pointer_type == Operation.SELL else y + 24.0,
         ),
         16.0,
         2.0,
@@ -555,6 +594,7 @@ def run(secid: str, period: datetime, interval: repository.Interval):
     step_mils = accelerations[step_indx]
 
     current_candle: Optional[Candle] = None
+    last_move: Optional[Move] = None
 
     while not window_should_close():
         begin_drawing()
@@ -564,6 +604,9 @@ def run(secid: str, period: datetime, interval: repository.Interval):
 
         graph.draw_axes()
         _draw_candles(graph)
+
+        if is_key_pressed(GLFW_KEY_M):
+            graph.mode = graph.mode.next()
 
         if is_key_pressed(KEY_RIGHT):
             start += 1
@@ -609,15 +652,18 @@ def run(secid: str, period: datetime, interval: repository.Interval):
         _draw_timer(graph, timer, step_mils * 10)
 
         current_candle = _get_current_candle(graph)
-        if current_candle:
-            mouse_position = get_mouse_position()
-            _draw_info(graph, mouse_position, current_candle)
+        mouse_position = get_mouse_position()
+        _draw_info(graph, mouse_position, current_candle)
 
-            if is_mouse_button_pressed(MOUSE_LEFT_BUTTON):
-                _click(graph, current_candle)
+        if (
+            current_candle
+            and is_mouse_button_pressed(MOUSE_LEFT_BUTTON)
+            and graph.mode == Mode.MOVE_PICKER
+        ):
+            last_move = _make_move(graph, current_candle, last_move)
 
-        _draw_pointer(graph, graph.candles[13], PointerType.buy)
-        _draw_pointer(graph, graph.candles[3], PointerType.sell)
+        _draw_pointer(graph, graph.candles[13], Operation.BUY)
+        _draw_pointer(graph, graph.candles[3], Operation.SELL)
 
         end_drawing()
     unload_font(graph.font)
