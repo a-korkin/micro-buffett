@@ -5,7 +5,6 @@ from typing import Optional
 from sqlalchemy import UUID, Enum, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
-
 from .base import Base
 
 
@@ -24,6 +23,7 @@ class Move(Base):
     current: Mapped[float] = mapped_column(Float())
     total: Mapped[float] = mapped_column(Float())
     operation: Mapped[Operation] = mapped_column(Enum(Operation, name="operations"))
+    sprint_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
 
     def __init__(
         self,
@@ -32,9 +32,11 @@ class Move(Base):
         current: float,
         total: float,
         operation: Operation,
+        sprint_id: uuid.UUID,
     ):
         self.candle_id = candle_id
         self.previous_id = previous_id
         self.current = current
         self.total = total
         self.operation = operation
+        self.sprint_id = sprint_id

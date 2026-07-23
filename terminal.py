@@ -3,6 +3,7 @@ import math
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional
+from uuid import UUID, uuid4
 
 from pyray import (
     Font,
@@ -475,7 +476,7 @@ def _draw_info(graph: Graph, mouse_position: Vector2, candle: Candle):
     draw_text_ex(graph.font, msg, position, 16.0, 2.0, WHITE)
 
 
-def _make_move(graph: Graph, candle: Candle, last_move: Optional[Move]) -> Move:
+def _make_move(candle: Candle, last_move: Optional[Move], sprint_id: UUID) -> Move:
     previous_id = None
     operation = Operation.BUY
 
@@ -492,6 +493,7 @@ def _make_move(graph: Graph, candle: Candle, last_move: Optional[Move]) -> Move:
         current=10.0,
         total=20.0,
         operation=operation,
+        sprint_id=sprint_id,
     )
     result = repository.add_move(move)
     return result
@@ -592,8 +594,8 @@ def run(secid: str, period: datetime, interval: repository.Interval):
 
     current_candle: Optional[Candle] = None
     last_move: Optional[Move] = None
-
     moves: list[tuple[Move, Candle]] = []
+    sprint_id = uuid4()
 
     while not window_should_close():
         begin_drawing()
@@ -659,11 +661,14 @@ def run(secid: str, period: datetime, interval: repository.Interval):
             and is_mouse_button_pressed(MOUSE_LEFT_BUTTON)
             and graph.mode == Mode.MOVE_PICKER
         ):
-            last_move = _make_move(graph, current_candle, last_move)
+            last_move = _make_move(current_candle, last_move, sprint_id)
             moves.append((last_move, current_candle))
 
         # draw moves:
         for move, candle in moves:
+            _first_candle = graph.candles[0]
+            if _first_candle.begin > candle.begin:
+                continue
             _draw_pointer(graph, candle, move.operation)
 
         end_drawing()
