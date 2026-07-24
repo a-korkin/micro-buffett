@@ -3,7 +3,9 @@ import uuid
 from typing import Optional
 
 from sqlalchemy import UUID, Enum, Float, ForeignKey, Integer
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from models.candle import Candle
 
 from .base import Base
 
@@ -18,7 +20,11 @@ class Move(Base):
     id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    candle_id: Mapped[UUID] = mapped_column(ForeignKey("candles.id"))
+    candle_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("candles.id")
+    )
+    candle: Mapped["Candle"] = relationship("Candle", foreign_keys="[Move.candle_id]")
+
     previous_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("moves.id"))
     summ: Mapped[float] = mapped_column(Float())
     remain: Mapped[float] = mapped_column(Float())
@@ -46,3 +52,9 @@ class Move(Base):
         self.price = price
         self.operation = operation
         self.sprint_id = sprint_id
+
+    def __str__(self) -> str:
+        return (
+            f"summ: {self.summ:.2f}, remain: {self.remain:.2f}, "
+            f"count: {self.count}, price: {self.price:.2f}, {self.operation}"
+        )

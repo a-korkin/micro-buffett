@@ -44,8 +44,8 @@ def make_move(
     move = Move(
         candle_id=candle.id,
         previous_id=previous_id,
-        summ=summ,
-        remain=remain,
+        summ=round(summ, 2),
+        remain=round(remain, 2),
         count=count,
         price=price,
         operation=operation,
@@ -53,3 +53,12 @@ def make_move(
     )
 
     return repository.add_move(move)
+
+
+def replay_moves(sprint_id: UUID):
+    moves = repository.get_moves(sprint_id)
+    for move, candle in moves:
+        print("=====================================================")
+        print(move)
+        print(candle)
+        print("=====================================================")

@@ -34,13 +34,14 @@ from raylib.defines import (
     GLFW_KEY_J,
     GLFW_KEY_K,
     GLFW_KEY_M,
+    GLFW_KEY_R,
     GLFW_KEY_SPACE,
     KEY_LEFT,
     KEY_RIGHT,
     MOUSE_LEFT_BUTTON,
 )
 
-from algo import make_move
+from algo import make_move, replay_moves
 from db import repository
 from models.candle import Candle
 from models.move import Move, Operation
@@ -596,6 +597,9 @@ def run(secid: str, period: datetime, interval: repository.Interval):
 
         if is_key_pressed(GLFW_KEY_M):
             graph.mode = graph.mode.next()
+
+        if is_key_pressed(GLFW_KEY_R):
+            replay_moves(UUID("069fcbc8-c11e-4a84-bc22-4848746616c9"))
 
         if is_key_pressed(KEY_RIGHT):
             start += 1

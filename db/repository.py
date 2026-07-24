@@ -1,10 +1,11 @@
 from datetime import datetime
 from enum import Enum
 from typing import cast
+from uuid import UUID
 
-from sqlalchemy import and_, func, select, text
+from sqlalchemy import alias, and_, func, select, text
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import aliased, selectinload
 
 from models.candle import Candle
 from models.coupon import Coupon
@@ -199,3 +200,34 @@ def add_move(move: Move) -> Move:
         res = connection.execute(stmt).first()
         connection.commit()
         return cast("Move", res)
+
+
+def get_moves(sprint_id: UUID) -> list[tuple[Move, Candle]]:
+    stmt = (
+        select(Move, Candle)
+        .join(Candle, Candle.id == Move.candle_id)
+        .where(Move.sprint_id == sprint_id)
+    )
+
+    move_fields = [
+        field for field in dir(Move) if not field.startswith("_") and field != "id"
+    ]
+    candle_fields = [
+        field for field in dir(Candle) if not field.startswith("_") and field != "id"
+    ]
+
+    with engine.connect() as connection:
+        results = [
+            (
+                Move(**{k: v for k, v in row._mapping.items() if k in move_fields}),
+                Candle({k: v for k, v in row._mapping.items() if k in candle_fields}),
+            )
+            for row in connection.execute(stmt).all()
+        ]
+        return results
+        # for move, candle in moves:
+        #     print("==========================================")
+        #     print(move.candle_id, candle.id)
+        #     print("==========================================")
+        #
+        # return []
