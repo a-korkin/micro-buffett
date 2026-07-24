@@ -207,6 +207,7 @@ def get_moves(sprint_id: UUID) -> list[tuple[Move, Candle]]:
         select(Move, Candle)
         .join(Candle, Candle.id == Move.candle_id)
         .where(Move.sprint_id == sprint_id)
+        .order_by(Candle.begin)
     )
 
     move_fields = [
@@ -225,9 +226,3 @@ def get_moves(sprint_id: UUID) -> list[tuple[Move, Candle]]:
             for row in connection.execute(stmt).all()
         ]
         return results
-        # for move, candle in moves:
-        #     print("==========================================")
-        #     print(move.candle_id, candle.id)
-        #     print("==========================================")
-        #
-        # return []

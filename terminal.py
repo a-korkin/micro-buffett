@@ -618,6 +618,8 @@ def run(secid: str, period: datetime, interval: repository.Interval):
             need_set_candle = not need_set_candle
             if need_set_candle:
                 moves = replay_moves(UUID("069fcbc8-c11e-4a84-bc22-4848746616c9"))
+                last_move = moves[-1][0]
+                graph.balance = last_move.remain
             else:
                 moves = []
 
