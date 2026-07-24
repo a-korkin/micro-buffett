@@ -262,18 +262,22 @@ class Graph:
             )
             self.axe_y.scales.append(scale)
 
+    def set_candle_position(self, candle: Candle) -> tuple[Vector2, Vector2]:
+        mmin = float(min(candle.open, candle.close))
+        mmax = float(max(candle.open, candle.close))
+
+        position = Vector2(
+            self.time_to_coord(candle.begin) - STEP_X / 2.0,
+            self.sum_to_coord(mmax),
+        )
+        y = self.step_y * (mmax - mmin)
+        size = Vector2(STEP_X, 3.0 if y == 0.0 else y)
+
+        return (position, size)
+
     def set_candles(self):
         for candle in self.candles:
-            mmin = float(min(candle.open, candle.close))
-            mmax = float(max(candle.open, candle.close))
-
-            position = Vector2(
-                self.time_to_coord(candle.begin) - STEP_X / 2.0,
-                self.sum_to_coord(mmax),
-            )
-            y = self.step_y * (mmax - mmin)
-            size = Vector2(STEP_X, 3.0 if y == 0.0 else y)
-
+            position, size = self.set_candle_position(candle)
             candle.position.x, candle.position.y = position.x, position.y
             candle.size.x, candle.size.y = size.x, size.y
 
@@ -497,7 +501,17 @@ def _draw_timer(graph: Graph, timer: float, mils: int):
     )
 
 
-def _draw_pointer(graph: Graph, candle: Candle, pointer_type: Operation):
+def _draw_pointer(
+    graph: Graph,
+    candle: Candle,
+    pointer_type: Operation,
+    need_set_candle: bool = False,
+):
+    if need_set_candle:
+        position, size = graph.set_candle_position(candle)
+        candle.position.x, candle.position.y = position.x, position.y
+        candle.size.x, candle.size.y = size.x, size.y
+
     size = 32.0
     x = candle.position.x + STEP_X / 2.0
     y = (
@@ -586,6 +600,8 @@ def run(secid: str, period: datetime, interval: repository.Interval):
     moves: list[tuple[Move, Candle]] = []
     sprint_id: UUID = uuid4()
 
+    need_set_candle: bool = False
+
     while not window_should_close():
         begin_drawing()
         clear_background(BACKGROUND_COLOR)
@@ -599,7 +615,11 @@ def run(secid: str, period: datetime, interval: repository.Interval):
             graph.mode = graph.mode.next()
 
         if is_key_pressed(GLFW_KEY_R):
-            replay_moves(UUID("069fcbc8-c11e-4a84-bc22-4848746616c9"))
+            need_set_candle = not need_set_candle
+            if need_set_candle:
+                moves = replay_moves(UUID("069fcbc8-c11e-4a84-bc22-4848746616c9"))
+            else:
+                moves = []
 
         if is_key_pressed(KEY_RIGHT):
             start += 1
@@ -662,7 +682,7 @@ def run(secid: str, period: datetime, interval: repository.Interval):
             _first_candle = graph.candles[0]
             if _first_candle.begin > candle.begin:
                 continue
-            _draw_pointer(graph, candle, move.operation)
+            _draw_pointer(graph, candle, move.operation, need_set_candle)
 
         end_drawing()
     unload_font(graph.font)

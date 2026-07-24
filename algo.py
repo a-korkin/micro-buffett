@@ -55,10 +55,5 @@ def make_move(
     return repository.add_move(move)
 
 
-def replay_moves(sprint_id: UUID):
-    moves = repository.get_moves(sprint_id)
-    for move, candle in moves:
-        print("=====================================================")
-        print(move)
-        print(candle)
-        print("=====================================================")
+def replay_moves(sprint_id: UUID) -> list[tuple[Move, Candle]]:
+    return repository.get_moves(sprint_id)
