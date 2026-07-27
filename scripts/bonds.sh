@@ -8,6 +8,17 @@ from=$(date +%F)
 till=$(date -d"+1 months" +%F)
 base_dir="${DIR}/bonds/${from}"
 count=0
+replacement="secid: RU000A10B396  price:   2.69%  percent: 26.50%  name: МОНОПОЛИЯ 001P-04
+secid: RU000A10AEF9  price: 112.14%  percent: 26.50%  name: ПАО ТГК-14 001Р-03
+secid: RU000A10ASE2  price: 103.44%  percent: 26.00%  name: РОЛЬФ БО 001Р-07
+secid: RU000A10B8X7  price: 101.14%  percent: 26.00%  name: ДАРС-Девелопмент 001Р-03
+secid: RU000A10B2P6  price: 107.16%  percent: 26.00%  name: АйДи Коллект 001P-01
+secid: RU000A10BFP3  price: 102.10%  percent: 26.00%  name: МВ ФИНАНС 001Р-06
+secid: RU000A10BQ60  price: 104.46%  percent: 25.50%  name: РОЛЬФ БО 001Р-08
+secid: RU000A10BWL7  price:   2.72%  percent: 25.50%  name: МОНОПОЛИЯ 001P-05
+secid: RU000A10BNM4  price: 108.66%  percent: 25.50%  name: АБЗ-1 002P-03
+secid: RU000A10BFJ6  price: 104.92%  percent: 25.50%  name: Полипласт АО П02-БО-04
+secid: RU000A10B9Q9  price: 109.84%  percent: 25.50%  name: ГЛОРАКС 001Р-04"
 
 if [ "$#" -ne 1 ]; then
     echo "Error: exactly 1 argument required"
@@ -145,6 +156,9 @@ case "$1" in
                 break
             fi
         done
+    ;;
+    "replace_mail")
+        sed -E ':a;N;$!ba; s|\\(<code>\\).*</code>|\1\n'"${replacement}"'\n</code>|g' scripts/mail.txt
     ;;
     *)
         echo "unknown command"
