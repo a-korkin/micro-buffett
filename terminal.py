@@ -65,7 +65,8 @@ RATIO_Y = 9.25
 
 class Mode(Enum):
     OFF = 1
-    MOVE_PICKER = 2
+    CANDLE_INFO = 2
+    MOVE_PICKER = 3
 
     def next(self):
         cls = self.__class__
@@ -433,23 +434,24 @@ def _candle_info(graph: Graph, candle: Optional[Candle], position: Vector2):
 
 
 def _get_current_candle(graph: Graph) -> Optional[Candle]:
-    mouse_pos = get_mouse_position()
-    if not (
-        mouse_pos.x >= graph.up_left.x
-        and mouse_pos.x <= graph.bottom_right.x
-        and mouse_pos.y >= graph.up_left.y
-        and mouse_pos.y <= graph.bottom_right.y
-    ):
-        return
-
-    for candle in graph.candles:
+    if graph.mode == Mode.CANDLE_INFO:
+        mouse_pos = get_mouse_position()
         if not (
-            mouse_pos.x >= candle.position.x
-            and mouse_pos.x <= candle.position.x + candle.size.x
+            mouse_pos.x >= graph.up_left.x
+            and mouse_pos.x <= graph.bottom_right.x
+            and mouse_pos.y >= graph.up_left.y
+            and mouse_pos.y <= graph.bottom_right.y
         ):
-            continue
+            return
 
-        return candle
+        for candle in graph.candles:
+            if not (
+                mouse_pos.x >= candle.position.x
+                and mouse_pos.x <= candle.position.x + candle.size.x
+            ):
+                continue
+
+            return candle
 
     return None
 
@@ -459,7 +461,7 @@ def _draw_info(graph: Graph, mouse_position: Vector2, candle: Candle):
     _candle_info(graph, candle, position)
 
     # draw dashed pointer
-    if candle:
+    if graph.mode == Mode.CANDLE_INFO and candle:
         up = Vector2(candle.position.x + candle.size.x / 2.0, graph.up_left.y)
         down = Vector2(candle.position.x + candle.size.x / 2.0, graph.bottom_right.y)
         left = Vector2(graph.up_left.x, mouse_position.y)

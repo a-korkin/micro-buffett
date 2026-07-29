@@ -189,7 +189,7 @@ if __name__ == "__main__":
     if len(args) > 0:
         if args[0] == "candles_add":
             if len(args) < 2:
-                logger.error("'SECID' not presented")
+                logger.error("'secid' not presented")
                 sys.exit(1)
             secid = args[1]
             candles = parse_candles(secid)
@@ -200,7 +200,7 @@ if __name__ == "__main__":
             sys.exit(run(secid="ozon", period=period, interval=interval))
         if args[0] == "show":
             if len(args) < 2:
-                logger.error("'SECID' not presented")
+                logger.error("'secid' not presented")
                 sys.exit(1)
             secid = args[1]
             candles_show(secid)

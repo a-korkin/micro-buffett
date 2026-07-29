@@ -7,8 +7,8 @@ migrate_up:
 migrate_down:
 	alembic downgrade -1
 candles_add:
-	python main.py candles_add ${SECID}
+	python main.py candles_add ${secid}
 terminal:
 	python main.py terminal
 show:
-	python main.py show ${SECID}
+	python main.py show ${secid}
