@@ -198,9 +198,14 @@ if __name__ == "__main__":
             period = datetime.strptime("2026-07-20", "%Y-%m-%d")
             interval = Interval.min_1
             sys.exit(run(secid="ozon", period=period, interval=interval))
+        if args[0] == "show":
+            if len(args) < 2:
+                logger.error("'SECID' not presented")
+                sys.exit(1)
+            secid = args[1]
+            candles_show(secid)
 
     # coupons_show()
     # main()
 
-    # candles_show("ozon")
     # candles = get_candles("ozon")

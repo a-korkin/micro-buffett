@@ -10,4 +10,5 @@ candles_add:
 	python main.py candles_add ${SECID}
 terminal:
 	python main.py terminal
-
+show:
+	python main.py show ${SECID}
