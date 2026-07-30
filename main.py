@@ -184,6 +184,39 @@ def parse_candles(secid: str) -> list[Candle]:
     return candles
 
 
+def _test_rsi(candles: list[Candle]):
+    size = 6
+    prev = candles[0]
+    averages = [prev.average()] * size
+    iteration = 0
+    # print(f"iter{iteration}: {averages}, {(sum(averages) / size):.2f}")
+
+    for candle in candles[1:]:
+        iteration += 1
+        print("=========================================================")
+        for i in range(size - 1):
+            averages[i] = averages[i + 1]
+        averages[size - 1] = prev.average()
+
+        print(
+            f"iter{iteration}: {averages}, {(sum(averages) / size):.2f}, {str(candle.begin)[11:]}"
+        )
+
+        prev = candle
+
+    # iter9: [2759.0, 2756.88, 2754.12, 2756.38, 2756.75, 2753.75], 2756.15, 15:28:00
+    # begin: 2026-07-20 15:19:00, percent: -0.254, avg: 2756.25
+    # begin: 2026-07-20 15:20:00, percent:  0.036, avg: 2753.50
+    # begin: 2026-07-20 15:21:00, percent:  0.109, avg: 2757.00
+    # begin: 2026-07-20 15:22:00, percent:  0.036, avg: 2759.00
+    # begin: 2026-07-20 15:23:00, percent: -0.109, avg: 2756.88
+    # begin: 2026-07-20 15:24:00, percent: -0.109, avg: 2754.12
+    # begin: 2026-07-20 15:25:00, percent:  0.145, avg: 2756.38
+    # begin: 2026-07-20 15:26:00, percent: -0.181, avg: 2756.75
+    # begin: 2026-07-20 15:27:00, percent: -0.127, avg: 2753.75
+    # begin: 2026-07-20 15:28:00, percent:  0.127, avg: 2754.50
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
     if len(args) > 0:
@@ -204,6 +237,10 @@ if __name__ == "__main__":
                 sys.exit(1)
             secid = args[1]
             candles_show(secid)
+        if args[0] == "check":
+            all_candles = get_candles("ozon")
+            cans = all_candles[:10]
+            _test_rsi(cans)
 
     # coupons_show()
     # main()

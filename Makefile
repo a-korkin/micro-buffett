@@ -12,3 +12,5 @@ terminal:
 	python main.py terminal
 show:
 	python main.py show ${secid}
+check: 
+	python main.py check

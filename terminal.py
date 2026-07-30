@@ -6,6 +6,7 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from pyray import (
+    BLUE,
     Font,
     Vector2,
     begin_drawing,
@@ -67,6 +68,7 @@ class Mode(Enum):
     OFF = 1
     CANDLE_INFO = 2
     MOVE_PICKER = 3
+    RSI = 4
 
     def next(self):
         cls = self.__class__
@@ -407,6 +409,7 @@ def _candle_info(graph: Graph, candle: Optional[Candle], position: Vector2):
         "close: ": f"{candle.close if candle else 0.0} ",
         "high: ": f"{candle.high if candle else 0.0} ",
         "low: ": f"{candle.low if candle else 0.0} ",
+        "average: ": f"{candle.average() if candle else 0.0} ",
         "percent: ": f"{candle.percent() if candle else 0.0}%",
     }
 
@@ -555,6 +558,42 @@ def _draw_pointer(
     )
 
 
+def _draw_rsi(graph: Graph):
+    prev = graph.candles[0]
+
+    prev_6 = [prev.average()] * 6
+    avg_6 = sum(prev_6) / len(prev_6)
+    cur_6 = len(prev_6) - 1  # 4
+
+    for current in graph.candles[1:]:
+        # draw average
+        start = (
+            prev.position.x + prev.size.x / 2.0,
+            graph.sum_to_coord(prev.average()),
+        )
+        end = (
+            current.position.x + current.size.x / 2.0,
+            graph.sum_to_coord(current.average()),
+        )
+        draw_line_ex(start, end, 3.0, BLACK)
+
+        # draw average 6
+        # start = (
+        #     prev.position.x + prev.size.x / 2.0,
+        #     graph.sum_to_coord(avg_6),
+        # )
+        print("===================================================")
+        print(current.begin)
+        for i in range(len(prev_6) - 2):
+            prev_6[i] = prev_6[i + 1]
+            print(i, prev_6[i])
+
+        prev_6[len(prev_6) - 1] = prev.average()
+        # print(current.begin, prev.average(), prev_6)
+
+        prev = current
+
+
 def init(graph: Graph, candle_slice: list[Candle]):
     graph.candles = candle_slice
     graph.candle_edges()
@@ -601,8 +640,23 @@ def run(secid: str, period: datetime, interval: repository.Interval):
     last_move: Optional[Move] = None
     moves: list[tuple[Move, Candle]] = []
     sprint_id: UUID = uuid4()
-
     need_set_candle: bool = False
+
+    # avg 6
+    # start = 10
+    # cur_can = graph.candles[start]
+    # size = 6
+    # cans = [cur_can.average()] * size
+    # print("-------------------------------------------------------------------")
+    # print(cur_can.begin, cans)
+    #
+    # for i in range(1, 6):
+    #     prev = graph.candles[start - i]
+    #     cans[size - (i + 1)] = prev.average()
+    #     print("-------------------------------------------------------------------")
+    #     print(cur_can.begin, cans)
+    #
+    # print("-------------------------------------------------------------------")
 
     while not window_should_close():
         begin_drawing()
@@ -671,6 +725,9 @@ def run(secid: str, period: datetime, interval: repository.Interval):
         current_candle = _get_current_candle(graph)
         mouse_position = get_mouse_position()
         _draw_info(graph, mouse_position, current_candle)
+
+        if graph.mode == Mode.RSI:
+            _draw_rsi(graph)
 
         if (
             current_candle
