@@ -7,6 +7,8 @@ from uuid import UUID, uuid4
 
 from pyray import (
     BLUE,
+    ORANGE,
+    PINK,
     Font,
     Vector2,
     begin_drawing,
@@ -558,12 +560,36 @@ def _draw_pointer(
     )
 
 
+def _calculate_rsi(candles: list[Candle], size: int) -> float:
+    prev = candles[0]
+    averages = [prev.average()] * size
+    iteration = 0
+
+    for candle in candles[1:]:
+        iteration += 1
+        print("=========================================================")
+        for i in range(size - 1):
+            averages[i] = averages[i + 1]
+        averages[size - 1] = prev.average()
+
+        print(
+            f"iter{iteration}: {averages}, {(sum(averages) / size):.2f}, {str(candle.begin)[11:]}"
+        )
+
+        prev = candle
+
+
 def _draw_rsi(graph: Graph):
     prev = graph.candles[0]
 
-    prev_6 = [prev.average()] * 6
-    avg_6 = sum(prev_6) / len(prev_6)
-    cur_6 = len(prev_6) - 1  # 4
+    size_6 = 6
+    averages_6 = [prev.average()] * size_6
+
+    size_12 = 12
+    averages_12 = [prev.average()] * size_12
+
+    size_24 = 24
+    averages_24 = [prev.average()] * size_24
 
     for current in graph.candles[1:]:
         # draw average
@@ -577,19 +603,56 @@ def _draw_rsi(graph: Graph):
         )
         draw_line_ex(start, end, 3.0, BLACK)
 
-        # draw average 6
-        # start = (
-        #     prev.position.x + prev.size.x / 2.0,
-        #     graph.sum_to_coord(avg_6),
-        # )
-        print("===================================================")
-        print(current.begin)
-        for i in range(len(prev_6) - 2):
-            prev_6[i] = prev_6[i + 1]
-            print(i, prev_6[i])
+        # rsi 6
+        before = sum(averages_6) / size_6
+        start = (
+            prev.position.x + prev.size.x / 2.0,
+            graph.sum_to_coord(before),
+        )
+        for i in range(size_6 - 1):
+            averages_6[i] = averages_6[i + 1]
+        averages_6[size_6 - 1] = prev.average()
 
-        prev_6[len(prev_6) - 1] = prev.average()
-        # print(current.begin, prev.average(), prev_6)
+        after = sum(averages_6) / size_6
+        end = (
+            current.position.x + current.size.x / 2.0,
+            graph.sum_to_coord(after),
+        )
+        draw_line_ex(start, end, 3.0, BLUE)
+
+        # rsi 12
+        before = sum(averages_12) / size_12
+        start = (
+            prev.position.x + prev.size.x / 2.0,
+            graph.sum_to_coord(before),
+        )
+        for i in range(size_12 - 1):
+            averages_12[i] = averages_12[i + 1]
+        averages_12[size_12 - 1] = prev.average()
+
+        after = sum(averages_12) / size_12
+        end = (
+            current.position.x + current.size.x / 2.0,
+            graph.sum_to_coord(after),
+        )
+        draw_line_ex(start, end, 3.0, ORANGE)
+
+        # rsi 24
+        before = sum(averages_24) / size_24
+        start = (
+            prev.position.x + prev.size.x / 2.0,
+            graph.sum_to_coord(before),
+        )
+        for i in range(size_24 - 1):
+            averages_24[i] = averages_24[i + 1]
+        averages_24[size_24 - 1] = prev.average()
+
+        after = sum(averages_24) / size_24
+        end = (
+            current.position.x + current.size.x / 2.0,
+            graph.sum_to_coord(after),
+        )
+        draw_line_ex(start, end, 3.0, PINK)
 
         prev = current
 
@@ -641,22 +704,6 @@ def run(secid: str, period: datetime, interval: repository.Interval):
     moves: list[tuple[Move, Candle]] = []
     sprint_id: UUID = uuid4()
     need_set_candle: bool = False
-
-    # avg 6
-    # start = 10
-    # cur_can = graph.candles[start]
-    # size = 6
-    # cans = [cur_can.average()] * size
-    # print("-------------------------------------------------------------------")
-    # print(cur_can.begin, cans)
-    #
-    # for i in range(1, 6):
-    #     prev = graph.candles[start - i]
-    #     cans[size - (i + 1)] = prev.average()
-    #     print("-------------------------------------------------------------------")
-    #     print(cur_can.begin, cans)
-    #
-    # print("-------------------------------------------------------------------")
 
     while not window_should_close():
         begin_drawing()

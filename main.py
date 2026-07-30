@@ -185,11 +185,10 @@ def parse_candles(secid: str) -> list[Candle]:
 
 
 def _test_rsi(candles: list[Candle]):
-    size = 6
+    size = 3
     prev = candles[0]
     averages = [prev.average()] * size
     iteration = 0
-    # print(f"iter{iteration}: {averages}, {(sum(averages) / size):.2f}")
 
     for candle in candles[1:]:
         iteration += 1
@@ -228,7 +227,8 @@ if __name__ == "__main__":
             candles = parse_candles(secid)
             add_candles(candles)
         if args[0] == "terminal":
-            period = datetime.strptime("2026-07-20", "%Y-%m-%d")
+            # period = datetime.strptime("2026-07-20", "%Y-%m-%d")
+            period = datetime.strptime("2026-07-09", "%Y-%m-%d")
             interval = Interval.min_1
             sys.exit(run(secid="ozon", period=period, interval=interval))
         if args[0] == "show":
@@ -241,8 +241,3 @@ if __name__ == "__main__":
             all_candles = get_candles("ozon")
             cans = all_candles[:10]
             _test_rsi(cans)
-
-    # coupons_show()
-    # main()
-
-    # candles = get_candles("ozon")
