@@ -171,17 +171,14 @@ def main():
         )
 
 
-def parse_candles(secid: str) -> list[Candle]:
+def parse_candles(secid: str):
     dir = os.getenv("DIR") or ""
     files = list_files(f"{dir}/candles/{secid}")
-    candles: list = []
 
     for filename in files:
         logger.info("parsing file: %s", filename)
         parsed = parse_file(filename, Candle, {"secid": secid})
-        candles.extend(parsed)
-
-    return candles
+        add_candles(parsed)
 
 
 def _test_rsi(candles: list[Candle]):
@@ -224,8 +221,7 @@ if __name__ == "__main__":
                 logger.error("'secid' not presented")
                 sys.exit(1)
             secid = args[1]
-            candles = parse_candles(secid)
-            add_candles(candles)
+            parse_candles(secid)
         if args[0] == "terminal":
             # period = datetime.strptime("2026-07-20", "%Y-%m-%d")
             period = datetime.strptime("2026-07-09", "%Y-%m-%d")
