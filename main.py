@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 from http import HTTPStatus
 from pathlib import Path
+from re import T
 from typing import Optional
 from uuid import UUID, uuid4
 
@@ -18,6 +19,7 @@ from db.repository import (
     add_candles,
     add_coupons,
     add_security_description,
+    add_top_todays,
     get_best_choices,
     get_coupon,
     get_coupons,
@@ -26,6 +28,7 @@ from db.repository import (
 from models.candle import Candle
 from models.coupon import Coupon
 from models.security import Description, Security
+from models.top import TopToday
 from terminal import run
 from utils import get_candles, parse_file
 
@@ -181,6 +184,12 @@ def parse_candles(secid: str):
         add_candles(parsed)
 
 
+def parse_top_today() -> list[TopToday]:
+    dir = os.getenv("DIR") or ""
+    parsed = parse_file(f"{dir}/top_today.csv", TopToday)
+    return parsed
+
+
 def _test_rsi(candles: list[Candle]):
     size = 3
     prev = candles[0]
@@ -234,6 +243,5 @@ if __name__ == "__main__":
             secid = args[1]
             candles_show(secid)
         if args[0] == "check":
-            all_candles = get_candles("ozon")
-            cans = all_candles[:10]
-            _test_rsi(cans)
+            tops = parse_top_today()
+            add_top_todays(tops)

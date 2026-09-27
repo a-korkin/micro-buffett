@@ -9,6 +9,7 @@ from models.candle import Candle
 from models.coupon import Coupon
 from models.move import Move, Operation
 from models.security import Security
+from models.top import TopToday
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

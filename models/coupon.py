@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import BigInteger, Date, Float, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from utils import optional_date, safe_float, save_int
+from utils import optional_date, safe_float, safe_int
 
 from .base import Base
 
@@ -29,7 +29,7 @@ class Coupon(Base):
     def __init__(self, obj: dict):
         self.isin = obj["isin"]
         self.name = obj["name"]
-        self.issuevalue = save_int(obj["issuevalue"])
+        self.issuevalue = safe_int(obj["issuevalue"])
         self.coupondate = obj["coupondate"]
         self.recorddate = optional_date(obj["recorddate"])
         self.startdate = optional_date(obj["startdate"])

@@ -1,6 +1,6 @@
 import csv
 import os
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 from models.candle import Candle
@@ -19,7 +19,14 @@ def safe_float(value, default=0.0):
         return default
 
 
-def save_int(value, default=0):
+def optional_float(value, default=None):
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
+
+def safe_int(value, default=0):
     try:
         return int(value)
     except (ValueError, TypeError):
@@ -27,6 +34,15 @@ def save_int(value, default=0):
 
 
 def optional_date(value) -> Optional[date]:
+    if str(value) == "":
+        return None
+    try:
+        return value
+    except (ValueError, TypeError):
+        return None
+
+
+def optional_datetime(value) -> Optional[datetime]:
     if str(value) == "":
         return None
     try:

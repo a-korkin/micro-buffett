@@ -11,6 +11,7 @@ from models.candle import Candle
 from models.coupon import Coupon
 from models.move import Move
 from models.security import BestSecurity, Security
+from models.top import TopToday
 
 from .engine import engine
 
@@ -226,3 +227,34 @@ def get_moves(sprint_id: UUID) -> list[tuple[Move, Candle]]:
             for row in connection.execute(stmt).all()
         ]
         return results
+
+
+def add_top_todays(tops: list[TopToday]):
+    data = []
+    for c in tops:
+        item = c.__dict__.copy()
+        item.pop("_sa_instance_state", None)
+        data.append(item)
+
+    if len(data) > 0:
+        stmt = insert(TopToday).values(data)
+        # stmt = stmt.on_conflict_do_update(
+        #     index_elements=["secid"],
+        #     set_=dict(
+        #         name=stmt.excluded.name,
+        #         issuevalue=stmt.excluded.issuevalue,
+        #         coupondate=stmt.excluded.coupondate,
+        #         recorddate=stmt.excluded.recorddate,
+        #         startdate=stmt.excluded.startdate,
+        #         initialfacevalue=stmt.excluded.initialfacevalue,
+        #         facevalue=stmt.excluded.facevalue,
+        #         faceunit=stmt.excluded.faceunit,
+        #         value=stmt.excluded.value,
+        #         valueprc=stmt.excluded.valueprc,
+        #         value_rub=stmt.excluded.value_rub,
+        #     ),
+        # )
+
+        with engine.connect() as connection:
+            connection.execute(stmt)
+            connection.commit()
